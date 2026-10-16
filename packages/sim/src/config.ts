@@ -37,7 +37,6 @@ export const LAWN_THRESHOLD = 20 * TICKS_PER_SECOND * SYMPATHY_SCALE;
 
 export const METRO_INTERVAL = 2 * TICKS_PER_SECOND;
 export const METRO_GROWTH_MINUTES = 30;
-export const METRO_JITTER = 36;
 
 export const ACT_MINUTE = 30;
 export const LIGHTS_MINUTE = 90;

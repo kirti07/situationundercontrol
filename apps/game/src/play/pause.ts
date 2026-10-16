@@ -1,7 +1,8 @@
 import { h } from '../dom.ts';
+import { icon } from '../ui/icons.ts';
 
 const COUNTDOWN_FROM = 3;
-const COUNT_MS = 700;
+const COUNT_MS = 650;
 
 export interface PauseOverlay {
   readonly element: HTMLElement;
@@ -9,18 +10,26 @@ export interface PauseOverlay {
   readonly dispose: () => void;
 }
 
-export const createPauseOverlay = (setRunning: (running: boolean) => void): PauseOverlay => {
+export const createPauseOverlay = (
+  setRunning: (running: boolean) => void,
+  quit: () => void,
+  settings: readonly HTMLElement[],
+): PauseOverlay => {
   const count = h('p', { className: 'pause__count', attrs: { 'aria-live': 'assertive' } });
-  const resume = h('button', {
-    className: 'button button--primary',
-    text: 'Resume',
-    attrs: { type: 'button' },
-  });
-  const element = h('div', { className: 'pause', attrs: { hidden: '' } }, [
-    h('p', { className: 'pause__title', text: 'Paused' }),
-    resume,
-    count,
+  const resume = h('button', { className: 'cta cta--light', attrs: { type: 'button' } }, [
+    h('span', { text: 'Resume' }),
   ]);
+  const leave = h(
+    'button',
+    { className: 'link-button link-button--light', attrs: { type: 'button' }, onClick: quit },
+    [icon('back'), h('span', { text: 'Leave for the front page' })],
+  );
+  const actions = h('div', { className: 'pause__actions' }, [resume, ...settings, leave]);
+  const element = h(
+    'div',
+    { className: 'pause', attrs: { hidden: '', role: 'dialog', 'aria-label': 'Paused' } },
+    [h('p', { className: 'pause__title', text: 'Paused' }), actions, count],
+  );
   let timer = 0;
 
   const tickDown = (remaining: number): void => {
@@ -36,17 +45,18 @@ export const createPauseOverlay = (setRunning: (running: boolean) => void): Paus
   };
 
   resume.addEventListener('click', () => {
-    resume.hidden = true;
+    actions.hidden = true;
     tickDown(COUNTDOWN_FROM);
   });
 
   return {
     element,
     pause: () => {
+      if (!element.hidden && !actions.hidden) return;
       window.clearTimeout(timer);
       setRunning(false);
       count.textContent = '';
-      resume.hidden = false;
+      actions.hidden = false;
       element.hidden = false;
       resume.focus();
     },

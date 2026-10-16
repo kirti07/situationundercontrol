@@ -1,7 +1,6 @@
 import {
   HYDRA_CHILDREN,
   MAX_GENERATION,
-  METRO_JITTER,
   RESPAWN_IMMUNITY,
   SMASH_SYMPATHY,
   SYMPATHY_MAX,
@@ -35,9 +34,9 @@ const enqueue = (state: State, gen: number): void => {
 };
 
 export const enterAtMetro = (state: State, gen: number, immuneUntil: number): void => {
-  const lane = nextInt(state.rng, LANE_COUNT);
-  const centerX = LANES[lane]?.centerX ?? 0;
-  const x = centerX + nextRange(state.rng, -METRO_JITTER, METRO_JITTER);
+  const lane = LANES[nextInt(state.rng, LANE_COUNT)] ?? LANES[0];
+  const jitter = lane?.jitter ?? 0;
+  const x = (lane?.centerX ?? 0) + nextRange(state.rng, -jitter, jitter);
   place(state, subOf(x), subOf(METRO_Y), gen, immuneUntil);
 };
 

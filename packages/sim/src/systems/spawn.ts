@@ -3,7 +3,6 @@ import {
   MARCH,
   METRO_GROWTH_MINUTES,
   METRO_INTERVAL,
-  METRO_JITTER,
   PHASE_BY_MINUTE,
   QUEUE_DRAIN_INTERVAL,
   TICKS_PER_MINUTE,
@@ -35,8 +34,9 @@ const spawnLawns = (state: State): void => {
   state.lawnAccumulator += state.sympathy;
   if (state.lawnAccumulator < LAWN_THRESHOLD) return;
   state.lawnAccumulator -= LAWN_THRESHOLD;
-  const lane = LAWN_LANES[nextInt(state.rng, LAWN_LANES.length)] ?? 0;
-  const x = (LANES[lane]?.centerX ?? 0) + nextRange(state.rng, -METRO_JITTER, METRO_JITTER);
+  const lane = LANES[LAWN_LANES[nextInt(state.rng, LAWN_LANES.length)] ?? 0];
+  const jitter = lane?.jitter ?? 0;
+  const x = (lane?.centerX ?? 0) + nextRange(state.rng, -jitter, jitter);
   const y = nextRange(state.rng, LAWN_Y_MIN, LAWN_Y_MAX);
   spawnAt(state, x, y);
 };

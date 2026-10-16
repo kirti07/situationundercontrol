@@ -1,18 +1,31 @@
-import { InputKind, Side } from '@suc/sim';
-import { ENDINGS } from '../content/endings.ts';
+import { InputKind, Side, swarmOf, type State } from '@suc/sim';
+import { audioEngine } from '../audio/engine.ts';
+import type { RunSummary } from '../content/endings.ts';
+import { clockLabel } from '../content/format.ts';
+import { CHARACTERS } from '../content/roster.ts';
+import { SIDE_CLASS } from '../content/sides.ts';
 import { h } from '../dom.ts';
 import { todaysEdition } from '../edition.ts';
 import { bindKeys } from '../input/keyboard.ts';
 import { bindPointers, type PointerHandlers } from '../input/pointer.ts';
-import { createControls, type Controls } from '../play/controls.ts';
-import { createHud, type Hud } from '../play/hud.ts';
+import { createCaptionStrip } from '../play/caption-strip.ts';
+import { createCaptionDirector } from '../play/captions.ts';
+import { createControls } from '../play/controls.ts';
+import { createHaptics } from '../play/haptics.ts';
+import { createHud } from '../play/hud.ts';
 import { createLoop } from '../play/loop.ts';
-import { createPauseOverlay, type PauseOverlay } from '../play/pause.ts';
+import { createPauseOverlay } from '../play/pause.ts';
+import { createRails } from '../play/rails.ts';
 import { advanceSession, createSession, queueInput, type Session } from '../play/session.ts';
+import { soundToggle, vibrationSettings } from '../play/settings.ts';
+import { createSoundDirector } from '../play/sound.ts';
 import { createSteerer } from '../play/steer.ts';
+import { loadArt } from '../render/art.ts';
 import { createCanvasRenderer } from '../render/canvas.ts';
 import type { Navigate, PlayParams, ScreenFactory } from '../router.ts';
+import { flag } from '../storage.ts';
 
+const RESULT_DELAY_MS = 900;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const ignore = (): void => undefined;
@@ -28,43 +41,93 @@ const POINTER_HANDLERS: Readonly<Record<Side, (session: Session) => PointerHandl
   [Side.Cockroach]: createSteerer,
 };
 
+const summarise = (state: State, edition: number): RunSummary => ({
+  side: state.side,
+  edition,
+  endReason: state.endReason,
+  endTick: state.endTick,
+  control: state.control,
+  reached: state.reached,
+  smashes: state.smashes,
+  became: state.became,
+  swarm: swarmOf(state),
+  peakSympathy: state.peakSympathy,
+});
+
 interface PlayView {
   readonly element: HTMLElement;
+  readonly stage: HTMLElement;
   readonly canvas: HTMLCanvasElement;
   readonly session: Session;
   readonly params: PlayParams;
   readonly navigate: Navigate;
 }
 
-const endCard = (view: PlayView): HTMLElement => {
-  const copy = ENDINGS[view.session.state.endReason];
-  return h('div', { className: 'end-card' }, [
-    h('h2', { className: 'end-card__headline', text: copy.headline }),
-    h('p', { className: 'end-card__score', text: copy.score(view.session.state) }),
-    h('button', {
-      className: 'button button--primary',
-      text: 'Play again',
-      onClick: () => {
-        view.navigate('play', view.params);
-      },
-    }),
-    h('button', {
-      className: 'button',
-      text: 'Front page',
-      onClick: () => {
-        view.navigate('front', undefined);
-      },
-    }),
-  ]);
-};
-
-const bindInputs = (
-  view: PlayView,
-  overlay: PauseOverlay,
-  controls: Controls,
-  signal: AbortSignal,
-): void => {
-  bindPointers(view.canvas, POINTER_HANDLERS[view.params.side](view.session), signal);
+const start = async (view: PlayView, signal: AbortSignal): Promise<void> => {
+  const { session, canvas, stage, element, params, navigate } = view;
+  const art = await loadArt();
+  if (signal.aborted) return;
+  const audio = audioEngine();
+  audio.setMuted(flag('muted'));
+  audio.setRunning(true);
+  const haptics = createHaptics(!flag('noVibration'));
+  const sound = createSoundDirector(session.state, audio, haptics);
+  const hud = createHud(session.state, [soundToggle(audio)]);
+  const strip = createCaptionStrip(session.state);
+  const controls = createControls(session);
+  const rails = createRails(session.state, session.edition);
+  const director = createCaptionDirector(session.state);
+  const renderer = createCanvasRenderer(canvas, {
+    art,
+    labels: { power: CHARACTERS[params.character].power },
+    reducedMotion: () => reducedMotion.matches,
+  });
+  const caption = (line: string | null): void => {
+    if (line === null) return;
+    strip.show(line);
+    rails.log(line, clockLabel(session.state.tick));
+  };
+  const loop = createLoop({
+    tick: () => {
+      const running = advanceSession(session);
+      renderer.ingest(session.state, performance.now());
+      sound.observe(session.state);
+      caption(director.observe(session.state));
+      return running;
+    },
+    frame: (alpha, now) => {
+      renderer.draw(session.state, alpha, now);
+      hud.update(session.state);
+      controls.update(session.state);
+      rails.update(session.state);
+    },
+    finished: () => {
+      window.setTimeout(() => {
+        navigate('result', { play: params, run: summarise(session.state, session.edition) });
+      }, RESULT_DELAY_MS);
+    },
+  });
+  const setRunning = (running: boolean): void => {
+    loop.setRunning(running);
+    audio.setRunning(running);
+  };
+  const overlay = createPauseOverlay(
+    setRunning,
+    () => {
+      navigate('front', { invited: null });
+    },
+    vibrationSettings(haptics),
+  );
+  hud.onPause(overlay.pause);
+  stage.append(hud.element, strip.element, controls.element, overlay.element);
+  element.prepend(rails.left);
+  element.append(rails.right);
+  stage.classList.remove('is-loading');
+  const resizeObserver = new ResizeObserver(renderer.resize);
+  resizeObserver.observe(canvas);
+  stage.addEventListener('pointerdown', audio.unlock, { signal, capture: true });
+  document.addEventListener('keydown', audio.unlock, { signal });
+  bindPointers(canvas, POINTER_HANDLERS[params.side](session), signal);
   bindKeys(
     { p: overlay.pause, P: overlay.pause, Escape: overlay.pause, ' ': controls.trigger },
     signal,
@@ -76,37 +139,13 @@ const bindInputs = (
     },
     { signal },
   );
-};
-
-const start = (view: PlayView, hud: Hud, controls: Controls, signal: AbortSignal): void => {
-  const { session, canvas, element } = view;
-  const renderer = createCanvasRenderer(canvas, { reducedMotion: () => reducedMotion.matches });
-  const loop = createLoop({
-    tick: () => {
-      const running = advanceSession(session);
-      renderer.ingest(session.state, performance.now());
-      return running;
-    },
-    frame: (alpha, now) => {
-      renderer.draw(session.state, alpha, now);
-      hud.update(session.state);
-      controls.update(session.state);
-    },
-    finished: () => {
-      element.append(endCard(view));
-    },
-  });
-  const overlay = createPauseOverlay(loop.setRunning);
-  hud.onPause(overlay.pause);
-  element.append(overlay.element);
-  const resizeObserver = new ResizeObserver(renderer.resize);
-  resizeObserver.observe(canvas);
-  bindInputs(view, overlay, controls, signal);
   signal.addEventListener('abort', () => {
     loop.stop();
+    audio.release();
     overlay.dispose();
     resizeObserver.disconnect();
   });
+  caption(director.observe(session.state));
   loop.start();
 };
 
@@ -114,15 +153,18 @@ export const playScreen: ScreenFactory<'play'> = (params, navigate) => {
   const edition = todaysEdition();
   const session = createSession({ seed: edition.seed, ...params }, edition.number);
   const canvas = h('canvas', {
-    className: 'play__field',
-    attrs: { 'aria-label': 'Kartavya Path' },
+    className: 'stage__field',
+    attrs: { 'aria-label': 'Kartavya Path at night' },
   });
-  const hud = createHud(session.state);
-  const controls = createControls(session);
-  const element = h('section', { className: 'play' }, [canvas, hud.element, controls.element]);
+  const stage = h('div', { className: 'stage is-loading' }, [canvas]);
+  const element = h(
+    'main',
+    { className: `screen screen--night play play--${SIDE_CLASS[params.side]}` },
+    [stage],
+  );
   const controller = new AbortController();
   queueMicrotask(() => {
-    start({ element, canvas, session, params, navigate }, hud, controls, controller.signal);
+    void start({ element, stage, canvas, session, params, navigate }, controller.signal);
   });
   return {
     element,

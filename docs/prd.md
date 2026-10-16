@@ -46,7 +46,7 @@ One fixed top-down map of Kartavya Path at night, India Gate at the top, the met
 | --- | --- | --- |
 | Metro | Bottom edge | Where roaches spawn and where smashed children respawn |
 | Three lanes | Centre path + left and right lawns | Roaches walk up any lane |
-| Canals | Between lanes | Impassable. Two bridges each are the only crossings (choke points) |
+| Canals | Between lanes | Impassable. One bridge each, plus the metro concourse at the bottom, are the only crossings (choke points) |
 | Lawns | Left and right lanes | Picnic crowd. Joins the march as roaches at a rate set by Sympathy |
 | C-Hexagon roads | Six roads round the arch | Inactive until 7:00 PM, then spawn roaches close to the arch |
 | The arch | Top | Goal. A roach that enters is removed and counted |

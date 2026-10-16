@@ -1,15 +1,20 @@
 import {
   CONTROL_START,
-  REACHED_QUOTA,
+  LIGHTS_MINUTE,
+  RUSH_MINUTE,
   Side,
   swarmOf,
-  SYMPATHY_SCALE,
+  SYMPATHY_MAX,
   TICKS_PER_MINUTE,
   type State,
 } from '@suc/sim';
-import { h } from '../dom.ts';
-import { clockLabel, countLabel } from '../content/format.ts';
+import { clockLabel, countLabel, percentLabel } from '../content/format.ts';
 import { CHARACTERS, SIDE_NAMES } from '../content/roster.ts';
+import { SIDE_CLASS } from '../content/sides.ts';
+import { h } from '../dom.ts';
+import { icon } from '../ui/icons.ts';
+
+const SWARM_SCALE = 600;
 
 interface Meter {
   readonly label: string;
@@ -24,28 +29,46 @@ const PRIMARY: Readonly<Record<Side, Meter>> = {
     fill: (state) => state.control / CONTROL_START,
   },
   [Side.Cockroach]: {
-    label: 'Reached',
-    text: (state) => `${countLabel(state.reached)} · swarm ${countLabel(swarmOf(state))}`,
-    fill: (state) => Math.min(1, state.reached / REACHED_QUOTA),
+    label: 'Swarm',
+    text: (state) => countLabel(swarmOf(state)),
+    fill: (state) => Math.min(1, swarmOf(state) / SWARM_SCALE),
   },
 };
 
-const SYMPATHY: Meter = {
-  label: 'Public sympathy',
-  text: (state) => `${String(Math.floor(state.sympathy / SYMPATHY_SCALE))}%`,
-  fill: (state) => state.sympathy / (100 * SYMPATHY_SCALE),
+const SYMPATHY_LABEL: Readonly<Record<Side, string>> = {
+  [Side.Agency]: 'Public sympathy for roaches',
+  [Side.Cockroach]: 'Public sympathy',
 };
+
+const KICKER: Readonly<Record<Side, (state: State) => string>> = {
+  [Side.Agency]: (state) =>
+    `${SIDE_NAMES[state.side]} · ${CHARACTERS[state.character].name} on duty`,
+  [Side.Cockroach]: () => 'Cockroaches · the march',
+};
+
+const NEXT_BEAT: readonly (readonly [number, string])[] = [
+  [LIGHTS_MINUTE, 'lights at 7'],
+  [RUSH_MINUTE, 'rush at 8'],
+  [Number.MAX_SAFE_INTEGER, 'edition at 9'],
+];
+
+const beatLabel = (minute: number): string =>
+  NEXT_BEAT.find(([until]) => minute < until)?.[1] ?? '';
 
 interface MeterView {
   readonly element: HTMLElement;
   readonly update: (state: State) => void;
 }
 
-const meterView = (meter: Meter, modifier: string): MeterView => {
+const meterView = (
+  label: string,
+  meter: Pick<Meter, 'text' | 'fill'>,
+  modifier: string,
+): MeterView => {
   const value = h('span', { className: 'meter__value' });
   const bar = h('span', { className: 'meter__fill' });
   const element = h('div', { className: `meter meter--${modifier}` }, [
-    h('span', { className: 'meter__label', text: meter.label }),
+    h('span', { className: 'meter__label', text: label }),
     value,
     h('span', { className: 'meter__track' }, [bar]),
   ]);
@@ -68,22 +91,33 @@ export interface Hud {
   readonly onPause: (handler: () => void) => void;
 }
 
-export const createHud = (state: State): Hud => {
+export const createHud = (state: State, extras: readonly HTMLElement[]): Hud => {
   const clock = h('span', { className: 'hud__clock' });
-  const primary = meterView(PRIMARY[state.side], 'primary');
-  const sympathy = meterView(SYMPATHY, 'sympathy');
-  const kicker = `${SIDE_NAMES[state.side]} · ${CHARACTERS[state.character].name}`;
-  const pause = h('button', {
-    className: 'hud__pause',
-    text: 'Pause',
-    attrs: { type: 'button', 'aria-label': 'Pause' },
-  });
-  const element = h('header', { className: 'hud' }, [
+  const beat = h('span', { className: 'hud__beat' });
+  const side = SIDE_CLASS[state.side];
+  const primary = meterView(PRIMARY[state.side].label, PRIMARY[state.side], `primary-${side}`);
+  const sympathy = meterView(
+    SYMPATHY_LABEL[state.side],
+    {
+      text: (current) => percentLabel(current.sympathy),
+      fill: (current) => current.sympathy / SYMPATHY_MAX,
+    },
+    `sympathy-${side}`,
+  );
+  const pause = h(
+    'button',
+    { className: 'hud__button', attrs: { type: 'button', 'aria-label': 'Pause' } },
+    [icon('pause')],
+  );
+  const element = h('header', { className: `hud hud--${side}` }, [
     pause,
-    h('span', { className: 'hud__kicker', text: kicker }),
-    clock,
-    primary.element,
-    sympathy.element,
+    h('div', { className: 'hud__where' }, [
+      h('span', { className: 'hud__kicker', text: KICKER[state.side](state) }),
+      h('span', { className: 'hud__title', text: 'Kartavya Path' }),
+    ]),
+    h('div', { className: 'hud__time' }, [clock, beat]),
+    ...extras,
+    h('div', { className: 'hud__meters' }, [primary.element, sympathy.element]),
   ]);
   let shownMinute = -1;
   return {
@@ -98,6 +132,7 @@ export const createHud = (state: State): Hud => {
       if (minute === shownMinute) return;
       shownMinute = minute;
       clock.textContent = clockLabel(current.tick);
+      beat.textContent = beatLabel(minute);
     },
   };
 };

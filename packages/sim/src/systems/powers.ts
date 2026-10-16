@@ -38,6 +38,7 @@ const nationDemands = (state: State): void => {
   }
   state.timers.frozenCount = frozen;
   state.timers.freezeEndsAt = state.tick + FREEZE_DURATION;
+  emit(state, EventKind.Freeze, x, y, frozen);
 };
 
 const masterstroke = (state: State): void => {

@@ -43,6 +43,7 @@ export const EventKind = {
   Power: 9,
   Backfire: 10,
   Muted: 11,
+  Freeze: 12,
 } as const;
 export type EventKind = (typeof EventKind)[keyof typeof EventKind];
 

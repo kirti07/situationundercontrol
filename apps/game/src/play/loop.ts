@@ -33,7 +33,7 @@ export const createLoop = (hooks: LoopHooks): Loop => {
   };
 
   const onFrame = (now: number): void => {
-    const elapsed = now - last;
+    const elapsed = Math.max(0, now - last);
     last = now;
     if (running) {
       simulate(elapsed);

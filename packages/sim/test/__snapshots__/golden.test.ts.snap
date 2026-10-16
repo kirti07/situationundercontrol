@@ -3,14 +3,14 @@
 exports[`golden replays > pins the Agency end state for a fixed log 1`] = `
 {
   "endReason": 1,
-  "endTick": 3276,
-  "hash": 730834500,
+  "endTick": 3138,
+  "hash": 2235158846,
 }
 `;
 
 exports[`golden replays > pins the cockroach end state with no input 1`] = `
 {
-  "hash": 3556793751,
-  "reached": 2254,
+  "hash": 2176729974,
+  "reached": 2891,
 }
 `;

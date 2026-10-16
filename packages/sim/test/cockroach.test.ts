@@ -45,10 +45,10 @@ const cockroachRun = (): State => createRun(COCKROACH);
 describe('steering', () => {
   it('walks the swarm toward the first finger', () => {
     const state = cockroachRun();
-    step(state, [input(state, InputKind.Steer, 60, 500)]);
-    advance(state, 600);
+    step(state, [input(state, InputKind.Steer, 66, 500)]);
+    advance(state, 1200);
     const starters = aliveSlots(state).filter((slot) => (state.roaches.id[slot] ?? 0) < 30);
-    const near = starters.filter((slot) => (state.roaches.x[slot] ?? 0) < 110 * SUB);
+    const near = starters.filter((slot) => (state.roaches.x[slot] ?? 0) < 84 * SUB);
     expect(near.length).toBe(starters.length);
   });
 
@@ -59,7 +59,7 @@ describe('steering', () => {
   });
 
   it('routes a finger on a canal to the nearest open ground', () => {
-    const canal = cellOf(118, 300);
+    const canal = cellOf(90, 300);
     expect(PASSABLE[canal]).toBe(0);
     expect(PASSABLE[NEAREST_OPEN[canal] ?? 0]).toBe(1);
   });

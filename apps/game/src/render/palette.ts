@@ -1,19 +1,27 @@
 export const PALETTE = {
-  night: '#0e1530',
-  ground: '#1b2547',
-  lawn: '#1d3a2e',
-  water: '#16324f',
-  bridge: '#4b5675',
-  arch: '#d9b26a',
-  archLit: '#ff9933',
-  road: '#2a3459',
-  roach: '#f4a300',
-  roachShell: '#7a3f12',
-  agency: '#2f7df6',
-  miss: '#c9c2b3',
-  immune: '#ffe0a3',
-  barricadeLight: '#f2f2f2',
-  stampShadow: '#000000',
+  newsprint: '#ffffff',
+  ink: '#111111',
+  night: '#0b1022',
+  night2: '#141b36',
+  sodium: '#ffb547',
+  marigold: '#e3a21a',
+  agency: '#2f6bff',
+  red: '#d2312b',
+  saffron: '#f08a24',
+  green: '#2e7d4f',
   frozen: '#9cc3ff',
-  muted: '#ff5a5a',
+  shadow: 'rgba(5, 8, 20, 0.55)',
 } as const;
+
+export const FONTS = {
+  headline: '"Playfair Display", Georgia, serif',
+  caption: '"Libre Caslon Text", Georgia, serif',
+  dateline: '"Special Elite", "Courier New", monospace',
+  ui: '"IBM Plex Sans Condensed", "Arial Narrow", sans-serif',
+} as const;
+
+export const FONT_FACES: readonly string[] = [
+  `900 16px ${FONTS.headline}`,
+  `400 16px ${FONTS.dateline}`,
+  `700 16px ${FONTS.ui}`,
+];

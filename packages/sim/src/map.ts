@@ -16,56 +16,53 @@ export interface LaneShape {
   readonly minX: number;
   readonly maxX: number;
   readonly centerX: number;
+  readonly jitter: number;
 }
 
 export const LANE_COUNT = 3;
 export const LAWN_LANES: readonly number[] = [0, 2];
 
 export const LANES: readonly LaneShape[] = [
-  { minX: 12, maxX: 108, centerX: 60 },
-  { minX: 132, maxX: 228, centerX: 180 },
-  { minX: 252, maxX: 348, centerX: 300 },
+  { minX: 48, maxX: 84, centerX: 66, jitter: 12 },
+  { minX: 108, maxX: 252, centerX: 180, jitter: 60 },
+  { minX: 276, maxX: 312, centerX: 294, jitter: 12 },
 ];
 
 export const OPEN_GROUND: readonly Rect[] = [
-  { x: 0, y: 120, w: 360, h: 156 },
-  { x: 12, y: 276, w: 336, h: 348 },
-  { x: 0, y: 624, w: 360, h: 24 },
+  { x: 24, y: 120, w: 312, h: 144 },
+  { x: 48, y: 264, w: 264, h: 336 },
+  { x: 24, y: 600, w: 312, h: 24 },
 ];
 
 export const CANALS: readonly Rect[] = [
-  { x: 108, y: 276, w: 24, h: 120 },
-  { x: 108, y: 420, w: 24, h: 108 },
-  { x: 108, y: 552, w: 24, h: 72 },
-  { x: 228, y: 276, w: 24, h: 120 },
-  { x: 228, y: 420, w: 24, h: 108 },
-  { x: 228, y: 552, w: 24, h: 72 },
+  { x: 84, y: 264, w: 24, h: 144 },
+  { x: 84, y: 432, w: 24, h: 168 },
+  { x: 252, y: 264, w: 24, h: 144 },
+  { x: 252, y: 432, w: 24, h: 168 },
 ];
 
 export const BRIDGES: readonly Rect[] = [
-  { x: 108, y: 396, w: 24, h: 24 },
-  { x: 108, y: 528, w: 24, h: 24 },
-  { x: 228, y: 396, w: 24, h: 24 },
-  { x: 228, y: 528, w: 24, h: 24 },
+  { x: 84, y: 408, w: 24, h: 24 },
+  { x: 252, y: 408, w: 24, h: 24 },
 ];
 
 export const LAWNS: readonly Rect[] = [
-  { x: 12, y: 276, w: 96, h: 348 },
-  { x: 252, y: 276, w: 96, h: 348 },
+  { x: 48, y: 264, w: 36, h: 336 },
+  { x: 276, y: 264, w: 36, h: 336 },
 ];
 
-export const ARCH: Rect = { x: 156, y: 132, w: 48, h: 24 };
-export const METRO_Y = 636;
-export const LAWN_Y_MIN = 300;
-export const LAWN_Y_MAX = 600;
+export const ARCH: Rect = { x: 156, y: 132, w: 48, h: 36 };
+export const METRO_Y = 612;
+export const LAWN_Y_MIN = 288;
+export const LAWN_Y_MAX = 588;
 
 export const ROADS: readonly Point[] = [
-  { x: 24, y: 132 },
-  { x: 336, y: 132 },
-  { x: 24, y: 252 },
-  { x: 336, y: 252 },
-  { x: 96, y: 264 },
-  { x: 264, y: 264 },
+  { x: 36, y: 132 },
+  { x: 324, y: 132 },
+  { x: 36, y: 192 },
+  { x: 324, y: 192 },
+  { x: 84, y: 252 },
+  { x: 276, y: 252 },
 ];
 
 export const CELL_COUNT = GRID_COLS * GRID_ROWS;
