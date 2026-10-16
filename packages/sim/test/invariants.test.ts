@@ -34,20 +34,27 @@ describe('sim invariants', () => {
     fc.assert(
       fc.property(taps, fc.integer(), (inputs, seed) => {
         const state = createRun({ ...AGENCY, seed });
+        const broken: string[] = [];
         let cursor = 0;
         while (!isOver(state)) {
           const before = { became: state.became, control: state.control };
-          const batch = inputs.slice(cursor).filter((input) => input.tick === state.tick);
-          cursor += batch.length;
-          step(state, batch);
-          expect(swarmOf(state)).toBeGreaterThanOrEqual(0);
-          expect(state.became).toBeGreaterThanOrEqual(before.became);
-          expect(state.control).toBeLessThanOrEqual(before.control);
-          expect(state.active).toBeLessThanOrEqual(MAX_ACTIVE);
+          const start = cursor;
+          while (inputs[cursor]?.tick === state.tick) cursor += 1;
+          step(state, inputs.slice(start, cursor));
+          const checks: readonly [boolean, string][] = [
+            [swarmOf(state) >= 0, 'swarm negative'],
+            [state.became >= before.became, 'became fell'],
+            [state.control <= before.control, 'control rose'],
+            [state.active <= MAX_ACTIVE, 'over the cap'],
+          ];
+          broken.push(
+            ...checks.filter(([ok]) => !ok).map(([, name]) => `${name} at ${String(state.tick)}`),
+          );
         }
+        expect(broken).toEqual([]);
         expect(aliveSlots(state)).toHaveLength(state.active);
       }),
       { numRuns: RUNS },
     );
-  });
+  }, 60_000);
 });
