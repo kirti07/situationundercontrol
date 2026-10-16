@@ -1,0 +1,28 @@
+{
+  "name": "@suc/game",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "size": "size-limit"
+  },
+  "dependencies": {
+    "@suc/sim": "workspace:*"
+  },
+  "devDependencies": {
+    "@size-limit/file": "14.2.0",
+    "size-limit": "14.2.0",
+    "vite": "8.3.4"
+  },
+  "size-limit": [
+    {
+      "name": "front page JS",
+      "path": "dist/assets/index-*.js",
+      "limit": "30 kB"
+    }
+  ]
+}

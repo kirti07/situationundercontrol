@@ -1,0 +1,37 @@
+:root {
+  --newsprint: #f3ecdc;
+  --ink: #1a1714;
+  --night: #0e1530;
+  --amber: #f2a93b;
+  --marigold: #f4a300;
+  --agency-blue: #2f7df6;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--newsprint);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+#app {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.masthead {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
