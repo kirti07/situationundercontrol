@@ -50,7 +50,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/sim/**/*.ts'],
+    files: ['packages/sim/src/**/*.ts'],
     rules: {
       'no-restricted-globals': [
         'error',
