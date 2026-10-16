@@ -50,6 +50,11 @@ export const BRIDGES: readonly Rect[] = [
   { x: 228, y: 528, w: 24, h: 24 },
 ];
 
+export const LAWNS: readonly Rect[] = [
+  { x: 12, y: 276, w: 96, h: 348 },
+  { x: 252, y: 276, w: 96, h: 348 },
+];
+
 export const ARCH: Rect = { x: 156, y: 132, w: 48, h: 24 };
 export const METRO_Y = 636;
 export const LAWN_Y_MIN = 300;

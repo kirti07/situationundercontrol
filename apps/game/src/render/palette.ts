@@ -1,0 +1,15 @@
+export const PALETTE = {
+  night: '#0e1530',
+  ground: '#1b2547',
+  lawn: '#1d3a2e',
+  water: '#16324f',
+  bridge: '#4b5675',
+  arch: '#d9b26a',
+  archLit: '#ff9933',
+  road: '#2a3459',
+  roach: '#f4a300',
+  roachShell: '#7a3f12',
+  agency: '#2f7df6',
+  miss: '#c9c2b3',
+  immune: '#ffe0a3',
+} as const;

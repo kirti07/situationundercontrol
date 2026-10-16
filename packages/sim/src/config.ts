@@ -39,6 +39,10 @@ export const METRO_INTERVAL = 2 * TICKS_PER_SECOND;
 export const METRO_GROWTH_MINUTES = 30;
 export const METRO_JITTER = 36;
 
+export const ACT_MINUTE = 30;
+export const LIGHTS_MINUTE = 90;
+export const RUSH_MINUTE = 150;
+
 export const COCKROACH_START_SWARM = 30;
 export const REACHED_QUOTA = 500;
 
@@ -52,9 +56,9 @@ export const MARCH: Phase = { fromMinute: 0, metroGrowth: 0, roadInterval: 0 };
 
 export const PHASES: readonly Phase[] = [
   MARCH,
-  { fromMinute: 30, metroGrowth: 1, roadInterval: 0 },
-  { fromMinute: 90, metroGrowth: 1, roadInterval: 4 * TICKS_PER_SECOND },
-  { fromMinute: 150, metroGrowth: 1, roadInterval: 2 * TICKS_PER_SECOND },
+  { fromMinute: ACT_MINUTE, metroGrowth: 1, roadInterval: 0 },
+  { fromMinute: LIGHTS_MINUTE, metroGrowth: 1, roadInterval: 4 * TICKS_PER_SECOND },
+  { fromMinute: RUSH_MINUTE, metroGrowth: 1, roadInterval: 2 * TICKS_PER_SECOND },
 ];
 
 const phaseAt = (minute: number): Phase =>

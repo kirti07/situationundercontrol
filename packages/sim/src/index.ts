@@ -8,6 +8,7 @@ export {
   BRIDGES,
   CANALS,
   LANES,
+  LAWNS,
   METRO_Y,
   OPEN_GROUND,
   ROADS,

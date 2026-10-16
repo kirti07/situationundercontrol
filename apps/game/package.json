@@ -23,6 +23,11 @@
       "name": "front page JS",
       "path": "dist/assets/index-*.js",
       "limit": "30 kB"
+    },
+    {
+      "name": "all JS",
+      "path": "dist/assets/*.js",
+      "limit": "60 kB"
     }
   ]
 }
