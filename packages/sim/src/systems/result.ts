@@ -1,5 +1,5 @@
-import { REACHED_QUOTA, RUN_TICKS } from '../config.ts';
-import { EndReason, Side, type State } from '../state.ts';
+import { LISTEN_HOLD, REACHED_QUOTA, RUN_TICKS } from '../config.ts';
+import { EndReason, NOT_SCHEDULED, Side, type State } from '../state.ts';
 
 interface Ending {
   readonly side: Side;
@@ -9,8 +9,13 @@ interface Ending {
 
 const timeUp = (state: State): boolean => state.tick >= RUN_TICKS;
 
+const listened = (state: State): boolean =>
+  state.timers.listenSince !== NOT_SCHEDULED &&
+  state.tick - state.timers.listenSince >= LISTEN_HOLD;
+
 const ENDINGS: readonly Ending[] = [
   { side: Side.Agency, reason: EndReason.Overrun, test: (state) => state.control <= 0 },
+  { side: Side.Agency, reason: EndReason.Listened, test: listened },
   { side: Side.Agency, reason: EndReason.Held, test: timeUp },
   {
     side: Side.Cockroach,

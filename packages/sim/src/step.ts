@@ -7,6 +7,7 @@ import { archSystem } from './systems/arch.ts';
 import { barricadeSystem } from './systems/barricade.ts';
 import { clockSystem } from './systems/clock.ts';
 import { moveSystem } from './systems/move.ts';
+import { listenDown, listenUp, powersSystem, usePower } from './systems/powers.ts';
 import { resultSystem } from './systems/result.ts';
 import { tap } from './systems/smash.ts';
 import { spawnSystem } from './systems/spawn.ts';
@@ -21,11 +22,15 @@ const INPUT_HANDLERS: Record<InputKind, InputHandler> = {
   [InputKind.Steer]: steerTo,
   [InputKind.SteerEnd]: steerEnd,
   [InputKind.SitIn]: sitIn,
+  [InputKind.Power]: usePower,
+  [InputKind.ListenDown]: listenDown,
+  [InputKind.ListenUp]: listenUp,
 };
 
 const SYSTEMS: readonly System[] = [
   spawnSystem,
   agencyAiSystem,
+  powersSystem,
   moveSystem,
   barricadeSystem,
   archSystem,

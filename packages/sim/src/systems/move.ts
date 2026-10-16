@@ -41,6 +41,7 @@ const settle = (roaches: Roaches, slot: number, nx: number, ny: number): void =>
 
 const advance = (state: State, field: FlowField, slot: number): void => {
   const { roaches } = state;
+  if ((roaches.frozenUntil[slot] ?? 0) > state.tick) return;
   const x = roaches.x[slot] ?? 0;
   const y = roaches.y[slot] ?? 0;
   const heading = direction(field.dir[cellOfSub(x, y)] ?? 0);

@@ -14,4 +14,6 @@ export const PALETTE = {
   immune: '#ffe0a3',
   barricadeLight: '#f2f2f2',
   stampShadow: '#000000',
+  frozen: '#9cc3ff',
+  muted: '#ff5a5a',
 } as const;

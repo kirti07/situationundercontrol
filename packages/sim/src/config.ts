@@ -45,6 +45,15 @@ export const RUSH_MINUTE = 150;
 
 export const COCKROACH_START_SWARM = 30;
 
+export const POWER_CHARGE = 20 * TICKS_PER_SECOND;
+export const FREEZE_RADIUS = 120;
+export const FREEZE_DURATION = 8 * TICKS_PER_SECOND;
+export const BACKFIRE_NUMERATOR = 3;
+export const BACKFIRE_DENOMINATOR = 10;
+export const MASTERSTROKE_Y = 360;
+export const SILENCE_DURATION = 20 * TICKS_PER_SECOND;
+export const LISTEN_HOLD = TICKS_PER_SECOND;
+
 export const SIT_IN_DURATION = 4 * TICKS_PER_SECOND;
 export const SIT_IN_CHARGE = 15 * TICKS_PER_SECOND;
 export const SIT_IN_SYMPATHY = 10 * SYMPATHY_SCALE;

@@ -286,3 +286,36 @@ button {
 .action__detail {
   font-size: calc(var(--unit) * 11);
 }
+
+.listen {
+  position: relative;
+  flex: 0 0 calc(var(--unit) * 104);
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--muted-night);
+  border-radius: calc(var(--unit) * 14);
+  background: transparent;
+  color: var(--muted-night);
+  touch-action: none;
+  user-select: none;
+}
+
+.listen__label {
+  position: relative;
+  font-size: calc(var(--unit) * 12);
+}
+
+.listen__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--newsprint);
+  opacity: 0.18;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+.listen--holding .listen__ring {
+  transform: scaleX(1);
+  transition: transform 1s linear;
+}

@@ -22,6 +22,7 @@ const place = (state: State, x: number, y: number, gen: number, immuneUntil: num
   roaches.mode[slot] = RoachMode.Walking;
   roaches.heldBy[slot] = NO_BARRICADE;
   roaches.immuneUntil[slot] = immuneUntil;
+  roaches.frozenUntil[slot] = 0;
   roaches.alive[slot] = 1;
   roaches.id[slot] = state.nextId;
   state.nextId += 1;

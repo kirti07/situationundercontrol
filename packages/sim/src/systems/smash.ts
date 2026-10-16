@@ -1,7 +1,7 @@
 import { SUB, TAP_COOLDOWN, TAP_RADIUS } from '../config.ts';
 import type { Input } from '../input.ts';
 import { subOf } from '../map.ts';
-import { emit, EventKind, Side, type State } from '../state.ts';
+import { emit, EventKind, Side, silenced, type State } from '../state.ts';
 import { smashWithin } from './hits.ts';
 
 const RADIUS_SQUARED = TAP_RADIUS * SUB * (TAP_RADIUS * SUB);
@@ -14,5 +14,9 @@ export const tap = (state: State, input: Input): void => {
   state.lastTap[input.pointer] = state.tick;
   const x = subOf(input.x);
   const y = subOf(input.y);
+  if (silenced(state)) {
+    emit(state, EventKind.Muted, x, y, 0);
+    return;
+  }
   emit(state, EventKind.Tap, x, y, smashWithin(state, x, y, RADIUS_SQUARED));
 };

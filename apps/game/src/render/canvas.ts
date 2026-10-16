@@ -30,14 +30,20 @@ const context2d = (canvas: HTMLCanvasElement): CanvasRenderingContext2D => {
 const lerp = (from: number, to: number, alpha: number): number =>
   (from + (to - from) * alpha) / SUB;
 
+const roachColor = (state: State, slot: number): string => {
+  if ((state.roaches.frozenUntil[slot] ?? 0) > state.tick) return PALETTE.frozen;
+  if ((state.roaches.immuneUntil[slot] ?? 0) > state.tick) return PALETTE.immune;
+  return PALETTE.roach;
+};
+
 const drawRoach = (
   ctx: CanvasRenderingContext2D,
   state: State,
   slot: number,
   alpha: number,
 ): void => {
-  const { x, y, px, py, immuneUntil } = state.roaches;
-  ctx.fillStyle = (immuneUntil[slot] ?? 0) > state.tick ? PALETTE.immune : PALETTE.roach;
+  const { x, y, px, py } = state.roaches;
+  ctx.fillStyle = roachColor(state, slot);
   ctx.beginPath();
   ctx.arc(
     lerp(px[slot] ?? 0, x[slot] ?? 0, alpha),

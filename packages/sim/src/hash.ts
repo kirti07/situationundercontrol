@@ -16,6 +16,11 @@ export const hashState = (state: State): number => {
     state.endReason,
     state.endTick,
     state.nextId,
+    state.timers.powerReadyAt,
+    state.timers.freezeEndsAt,
+    state.timers.silencedUntil,
+    state.timers.sitInUntil,
+    state.stamp.landsAt,
   ];
   let hash = counters.reduce(mix, 0x811c9dc5);
   const roaches = state.roaches;
@@ -25,6 +30,8 @@ export const hashState = (state: State): number => {
     hash = mix(hash, alive * (roaches.x[slot] ?? 0));
     hash = mix(hash, alive * (roaches.y[slot] ?? 0));
     hash = mix(hash, alive * (roaches.gen[slot] ?? 0));
+    hash = mix(hash, alive * (roaches.mode[slot] ?? 0));
+    hash = mix(hash, alive * (roaches.frozenUntil[slot] ?? 0));
   }
   return hash >>> 0;
 };

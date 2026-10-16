@@ -12,7 +12,7 @@ import {
 import { LANES, LAWN_LANES, LAWN_Y_MAX, LAWN_Y_MIN, ROADS } from '../map.ts';
 import { nextInt, nextRange } from '../rng.ts';
 import { drainOne, spawnAt, spawnAtMetro } from '../roaches.ts';
-import type { State } from '../state.ts';
+import { silenced, type State } from '../state.ts';
 
 const spawnMetro = (state: State, phase: Phase, minute: number): void => {
   if (state.tick % METRO_INTERVAL !== 0) return;
@@ -31,6 +31,7 @@ const spawnRoads = (state: State, phase: Phase): void => {
 };
 
 const spawnLawns = (state: State): void => {
+  if (silenced(state)) return;
   state.lawnAccumulator += state.sympathy;
   if (state.lawnAccumulator < LAWN_THRESHOLD) return;
   state.lawnAccumulator -= LAWN_THRESHOLD;

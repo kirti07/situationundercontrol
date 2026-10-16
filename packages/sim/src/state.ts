@@ -1,4 +1,5 @@
 import {
+  ACT_MINUTE,
   AI_BARRICADE_INTERVAL,
   BARRICADE_SLOTS,
   CONTROL_START,
@@ -8,6 +9,7 @@ import {
   POINTERS,
   STAMP_INTERVAL,
   TAP_COOLDOWN,
+  TICKS_PER_MINUTE,
 } from './config.ts';
 import { createField, type FlowField } from './flow.ts';
 import { CELL_COUNT } from './map.ts';
@@ -38,6 +40,9 @@ export const EventKind = {
   Barricade: 6,
   Climb: 7,
   SitIn: 8,
+  Power: 9,
+  Backfire: 10,
+  Muted: 11,
 } as const;
 export type EventKind = (typeof EventKind)[keyof typeof EventKind];
 
@@ -59,6 +64,7 @@ export interface Roaches {
   readonly mode: Uint8Array;
   readonly heldBy: Int8Array;
   readonly immuneUntil: Int32Array;
+  readonly frozenUntil: Int32Array;
 }
 
 export interface Barricades {
@@ -84,6 +90,12 @@ export interface Timers {
   sitInUntil: number;
   sitInReadyAt: number;
   nextBarricadeAt: number;
+  powerReadyAt: number;
+  freezeEndsAt: number;
+  frozenCount: number;
+  silencedUntil: number;
+  listenSince: number;
+  roadCursor: number;
 }
 
 export interface RunSetup {
@@ -136,6 +148,7 @@ const createRoaches = (): Roaches => ({
   mode: new Uint8Array(MAX_ACTIVE),
   heldBy: new Int8Array(MAX_ACTIVE).fill(NO_BARRICADE),
   immuneUntil: new Int32Array(MAX_ACTIVE),
+  frozenUntil: new Int32Array(MAX_ACTIVE),
 });
 
 const createBarricades = (): Barricades => ({
@@ -157,7 +170,17 @@ export const createState = (setup: RunSetup): State => ({
   barricades: createBarricades(),
   stamp: { x: 0, y: 0, landsAt: NOT_SCHEDULED, nextAt: STAMP_INTERVAL },
   steering: { field: createField(), goal: new Uint8Array(CELL_COUNT), cell: NOT_SCHEDULED },
-  timers: { sitInUntil: 0, sitInReadyAt: 0, nextBarricadeAt: AI_BARRICADE_INTERVAL },
+  timers: {
+    sitInUntil: 0,
+    sitInReadyAt: 0,
+    nextBarricadeAt: AI_BARRICADE_INTERVAL,
+    powerReadyAt: ACT_MINUTE * TICKS_PER_MINUTE,
+    freezeEndsAt: NOT_SCHEDULED,
+    frozenCount: 0,
+    silencedUntil: 0,
+    listenSince: NOT_SCHEDULED,
+    roadCursor: 0,
+  },
   free: freeSlots(),
   queue: new Int32Array(MAX_GENERATION + 1),
   rng: seedRng(setup.seed),
@@ -189,6 +212,8 @@ export const modeOf = (state: State, slot: number): RoachMode =>
   (state.roaches.mode[slot] ?? RoachMode.Walking) as RoachMode;
 
 export const sitInActive = (state: State): boolean => state.tick < state.timers.sitInUntil;
+
+export const silenced = (state: State): boolean => state.tick < state.timers.silencedUntil;
 
 export const emit = (state: State, kind: EventKind, x: number, y: number, value: number): void => {
   if (state.eventCount >= EVENT_CAPACITY) return;

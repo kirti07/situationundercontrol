@@ -17,6 +17,7 @@ const STYLE: Readonly<Record<number, { color: string; radius: number }>> = {
   [EventKind.Smash]: { color: PALETTE.agency, radius: 30 },
   [EventKind.Enter]: { color: PALETTE.archLit, radius: 18 },
   [EventKind.StampLand]: { color: PALETTE.agency, radius: 40 },
+  [EventKind.Muted]: { color: PALETTE.muted, radius: 16 },
 };
 
 export const createEffects = (): Effects => ({
