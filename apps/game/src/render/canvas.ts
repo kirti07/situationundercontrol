@@ -1,6 +1,15 @@
-import { LIGHTS_MINUTE, MAX_ACTIVE, SUB, TICKS_PER_MINUTE, type State } from '@suc/sim';
+import {
+  FIELD_HEIGHT,
+  FIELD_WIDTH,
+  LIGHTS_MINUTE,
+  MAX_ACTIVE,
+  SUB,
+  TICKS_PER_MINUTE,
+  type State,
+} from '@suc/sim';
 import { drawBackdrop } from './backdrop.ts';
 import { createEffects, drawEffects, ingestEvents } from './effects.ts';
+import { drawBarricades, drawSitIn, drawStampShadow } from './hazards.ts';
 import { PALETTE } from './palette.ts';
 import type { Renderer } from './renderer.ts';
 import { fitCanvas } from './viewport.ts';
@@ -81,7 +90,10 @@ export const createCanvasRenderer = (
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(backdrop, 0, 0);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    drawStampShadow(ctx, state);
+    drawBarricades(ctx, state);
     drawRoaches(ctx, state, alpha);
+    drawSitIn(ctx, state, FIELD_WIDTH, FIELD_HEIGHT);
     drawEffects(ctx, effects, now, options.reducedMotion());
   };
 

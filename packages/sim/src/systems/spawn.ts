@@ -9,7 +9,7 @@ import {
   TICKS_PER_MINUTE,
   type Phase,
 } from '../config.ts';
-import { LANES, LAWN_LANES, LAWN_Y_MAX, LAWN_Y_MIN, NO_LANE, ROADS } from '../map.ts';
+import { LANES, LAWN_LANES, LAWN_Y_MAX, LAWN_Y_MIN, ROADS } from '../map.ts';
 import { nextInt, nextRange } from '../rng.ts';
 import { drainOne, spawnAt, spawnAtMetro } from '../roaches.ts';
 import type { State } from '../state.ts';
@@ -26,7 +26,7 @@ const spawnRoads = (state: State, phase: Phase): void => {
   const sincePhase = state.tick - phase.fromMinute * TICKS_PER_MINUTE;
   if (phase.roadInterval === 0 || sincePhase % phase.roadInterval !== 0) return;
   for (const road of ROADS) {
-    spawnAt(state, road.x, road.y, NO_LANE);
+    spawnAt(state, road.x, road.y);
   }
 };
 
@@ -37,7 +37,7 @@ const spawnLawns = (state: State): void => {
   const lane = LAWN_LANES[nextInt(state.rng, LAWN_LANES.length)] ?? 0;
   const x = (LANES[lane]?.centerX ?? 0) + nextRange(state.rng, -METRO_JITTER, METRO_JITTER);
   const y = nextRange(state.rng, LAWN_Y_MIN, LAWN_Y_MAX);
-  spawnAt(state, x, y, lane);
+  spawnAt(state, x, y);
 };
 
 const drainQueue = (state: State): void => {

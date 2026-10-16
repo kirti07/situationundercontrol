@@ -11,6 +11,7 @@ export {
   LAWNS,
   METRO_Y,
   OPEN_GROUND,
+  NO_LANE,
   ROADS,
   type LaneShape,
   type Point,

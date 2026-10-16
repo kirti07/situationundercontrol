@@ -12,4 +12,6 @@ export const PALETTE = {
   agency: '#2f7df6',
   miss: '#c9c2b3',
   immune: '#ffe0a3',
+  barricadeLight: '#f2f2f2',
+  stampShadow: '#000000',
 } as const;

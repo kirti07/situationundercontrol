@@ -10,7 +10,7 @@ exports[`golden replays > pins the Agency end state for a fixed log 1`] = `
 
 exports[`golden replays > pins the cockroach end state with no input 1`] = `
 {
-  "hash": 1708008844,
-  "reached": 616,
+  "hash": 4016857181,
+  "reached": 2254,
 }
 `;

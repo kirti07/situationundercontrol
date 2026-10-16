@@ -4,10 +4,12 @@ import { h } from '../dom.ts';
 import { todaysEdition } from '../edition.ts';
 import { bindKeys } from '../input/keyboard.ts';
 import { bindPointers, type PointerHandlers } from '../input/pointer.ts';
+import { createControls, type Controls } from '../play/controls.ts';
 import { createHud, type Hud } from '../play/hud.ts';
 import { createLoop } from '../play/loop.ts';
 import { createPauseOverlay, type PauseOverlay } from '../play/pause.ts';
 import { advanceSession, createSession, queueInput, type Session } from '../play/session.ts';
+import { createSteerer } from '../play/steer.ts';
 import { createCanvasRenderer } from '../render/canvas.ts';
 import type { Navigate, PlayParams, ScreenFactory } from '../router.ts';
 
@@ -23,7 +25,7 @@ const POINTER_HANDLERS: Readonly<Record<Side, (session: Session) => PointerHandl
     move: ignore,
     release: ignore,
   }),
-  [Side.Cockroach]: () => ({ press: ignore, move: ignore, release: ignore }),
+  [Side.Cockroach]: createSteerer,
 };
 
 interface PlayView {
@@ -56,9 +58,17 @@ const endCard = (view: PlayView): HTMLElement => {
   ]);
 };
 
-const bindInputs = (view: PlayView, overlay: PauseOverlay, signal: AbortSignal): void => {
+const bindInputs = (
+  view: PlayView,
+  overlay: PauseOverlay,
+  controls: Controls,
+  signal: AbortSignal,
+): void => {
   bindPointers(view.canvas, POINTER_HANDLERS[view.params.side](view.session), signal);
-  bindKeys({ p: overlay.pause, P: overlay.pause, Escape: overlay.pause }, signal);
+  bindKeys(
+    { p: overlay.pause, P: overlay.pause, Escape: overlay.pause, ' ': controls.trigger },
+    signal,
+  );
   document.addEventListener(
     'visibilitychange',
     () => {
@@ -68,7 +78,7 @@ const bindInputs = (view: PlayView, overlay: PauseOverlay, signal: AbortSignal):
   );
 };
 
-const start = (view: PlayView, hud: Hud, signal: AbortSignal): void => {
+const start = (view: PlayView, hud: Hud, controls: Controls, signal: AbortSignal): void => {
   const { session, canvas, element } = view;
   const renderer = createCanvasRenderer(canvas, { reducedMotion: () => reducedMotion.matches });
   const loop = createLoop({
@@ -80,6 +90,7 @@ const start = (view: PlayView, hud: Hud, signal: AbortSignal): void => {
     frame: (alpha, now) => {
       renderer.draw(session.state, alpha, now);
       hud.update(session.state);
+      controls.update(session.state);
     },
     finished: () => {
       element.append(endCard(view));
@@ -90,7 +101,7 @@ const start = (view: PlayView, hud: Hud, signal: AbortSignal): void => {
   element.append(overlay.element);
   const resizeObserver = new ResizeObserver(renderer.resize);
   resizeObserver.observe(canvas);
-  bindInputs(view, overlay, signal);
+  bindInputs(view, overlay, controls, signal);
   signal.addEventListener('abort', () => {
     loop.stop();
     overlay.dispose();
@@ -107,10 +118,11 @@ export const playScreen: ScreenFactory<'play'> = (params, navigate) => {
     attrs: { 'aria-label': 'Kartavya Path' },
   });
   const hud = createHud(session.state);
-  const element = h('section', { className: 'play' }, [canvas, hud.element]);
+  const controls = createControls(session);
+  const element = h('section', { className: 'play' }, [canvas, hud.element, controls.element]);
   const controller = new AbortController();
   queueMicrotask(() => {
-    start({ element, canvas, session, params, navigate }, hud, controller.signal);
+    start({ element, canvas, session, params, navigate }, hud, controls, controller.signal);
   });
   return {
     element,

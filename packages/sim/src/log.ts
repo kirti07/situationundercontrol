@@ -1,5 +1,5 @@
 import { FIELD_HEIGHT, FIELD_WIDTH, POINTERS, RUN_TICKS, SIM_VERSION } from './config.ts';
-import { INPUT_KINDS, InputKind, type Input } from './input.ts';
+import { HAS_POINT, INPUT_KINDS, type Input } from './input.ts';
 import { Character, Side } from './state.ts';
 
 export const MAX_LOG_BYTES = 32768;
@@ -24,10 +24,6 @@ export interface RunLog {
 
 export type DecodeResult =
   { readonly ok: true; readonly log: RunLog } | { readonly ok: false; readonly reason: string };
-
-const HAS_POINT: Record<InputKind, boolean> = {
-  [InputKind.Tap]: true,
-};
 
 const CHARACTERS_FOR: Record<Side, readonly Character[]> = {
   [Side.Agency]: [Character.PrimeTime, Character.Chanakya, Character.PradhanSevak],

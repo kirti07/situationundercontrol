@@ -8,16 +8,9 @@ import {
 } from './config.ts';
 import { LANE_COUNT, LANES, METRO_Y, subOf } from './map.ts';
 import { nextInt, nextRange } from './rng.ts';
-import { emit, EventKind, type State } from './state.ts';
+import { emit, EventKind, NO_BARRICADE, RoachMode, type State } from './state.ts';
 
-const place = (
-  state: State,
-  x: number,
-  y: number,
-  gen: number,
-  lane: number,
-  immuneUntil: number,
-): void => {
+const place = (state: State, x: number, y: number, gen: number, immuneUntil: number): void => {
   state.freeCount -= 1;
   const slot = state.free[state.freeCount] ?? 0;
   const roaches = state.roaches;
@@ -26,7 +19,8 @@ const place = (
   roaches.px[slot] = x;
   roaches.py[slot] = y;
   roaches.gen[slot] = gen;
-  roaches.lane[slot] = lane;
+  roaches.mode[slot] = RoachMode.Walking;
+  roaches.heldBy[slot] = NO_BARRICADE;
   roaches.immuneUntil[slot] = immuneUntil;
   roaches.alive[slot] = 1;
   roaches.id[slot] = state.nextId;
@@ -43,7 +37,7 @@ export const enterAtMetro = (state: State, gen: number, immuneUntil: number): vo
   const lane = nextInt(state.rng, LANE_COUNT);
   const centerX = LANES[lane]?.centerX ?? 0;
   const x = centerX + nextRange(state.rng, -METRO_JITTER, METRO_JITTER);
-  place(state, subOf(x), subOf(METRO_Y), gen, lane, immuneUntil);
+  place(state, subOf(x), subOf(METRO_Y), gen, immuneUntil);
 };
 
 export const spawnAtMetro = (state: State, gen: number, immuneUntil: number): void => {
@@ -55,13 +49,13 @@ export const spawnAtMetro = (state: State, gen: number, immuneUntil: number): vo
   enterAtMetro(state, gen, immuneUntil);
 };
 
-export const spawnAt = (state: State, x: number, y: number, lane: number): void => {
+export const spawnAt = (state: State, x: number, y: number): void => {
   state.became += 1;
   if (state.freeCount === 0) {
     enqueue(state, 0);
     return;
   }
-  place(state, subOf(x), subOf(y), 0, lane, state.tick);
+  place(state, subOf(x), subOf(y), 0, state.tick);
 };
 
 const isWaiting = (count: number): boolean => count > 0;
@@ -73,7 +67,15 @@ export const drainOne = (state: State): void => {
   enterAtMetro(state, gen, state.tick + RESPAWN_IMMUNITY);
 };
 
+const release = (state: State, slot: number): void => {
+  const barricade = state.roaches.heldBy[slot] ?? NO_BARRICADE;
+  state.roaches.heldBy[slot] = NO_BARRICADE;
+  if (state.roaches.mode[slot] !== RoachMode.Piled) return;
+  state.barricades.pile[barricade] = (state.barricades.pile[barricade] ?? 0) - 1;
+};
+
 export const removeRoach = (state: State, slot: number): void => {
+  release(state, slot);
   state.roaches.alive[slot] = 0;
   state.free[state.freeCount] = slot;
   state.freeCount += 1;

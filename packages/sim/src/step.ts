@@ -2,12 +2,15 @@ import { COCKROACH_START_SWARM } from './config.ts';
 import { InputKind, type Input } from './input.ts';
 import { spawnAtMetro } from './roaches.ts';
 import { createState, EndReason, Side, type RunSetup, type State } from './state.ts';
+import { agencyAiSystem } from './systems/agencyAi.ts';
 import { archSystem } from './systems/arch.ts';
+import { barricadeSystem } from './systems/barricade.ts';
 import { clockSystem } from './systems/clock.ts';
 import { moveSystem } from './systems/move.ts';
 import { resultSystem } from './systems/result.ts';
 import { tap } from './systems/smash.ts';
 import { spawnSystem } from './systems/spawn.ts';
+import { sitIn, steerEnd, steerTo } from './systems/swarm.ts';
 import { sympathySystem } from './systems/sympathy.ts';
 
 type System = (state: State) => void;
@@ -15,11 +18,16 @@ type InputHandler = (state: State, input: Input) => void;
 
 const INPUT_HANDLERS: Record<InputKind, InputHandler> = {
   [InputKind.Tap]: tap,
+  [InputKind.Steer]: steerTo,
+  [InputKind.SteerEnd]: steerEnd,
+  [InputKind.SitIn]: sitIn,
 };
 
 const SYSTEMS: readonly System[] = [
   spawnSystem,
+  agencyAiSystem,
   moveSystem,
+  barricadeSystem,
   archSystem,
   sympathySystem,
   clockSystem,

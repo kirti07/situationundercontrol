@@ -44,6 +44,25 @@ export const LIGHTS_MINUTE = 90;
 export const RUSH_MINUTE = 150;
 
 export const COCKROACH_START_SWARM = 30;
+
+export const SIT_IN_DURATION = 4 * TICKS_PER_SECOND;
+export const SIT_IN_CHARGE = 15 * TICKS_PER_SECOND;
+export const SIT_IN_SYMPATHY = 10 * SYMPATHY_SCALE;
+
+export const STAMP_INTERVAL = 3 * TICKS_PER_SECOND;
+export const STAMP_WARNING = 48;
+export const STAMP_RADIUS = 40;
+export const DENSITY_CELL = 40;
+
+export const BARRICADE_SLOTS = 6;
+export const AI_BARRICADE_INTERVAL = 30 * TICKS_PER_SECOND;
+export const AI_BARRICADE_MAX = 3;
+export const BARRICADE_Y_MIN = 312;
+export const BARRICADE_Y_MAX = 576;
+export const CLIMB_THRESHOLD = 25;
+export const CLIMB_CLEARANCE = 24;
+export const CLIMB_SPEED_NUMERATOR = 3;
+export const CLIMB_SPEED_DENOMINATOR = 2;
 export const REACHED_QUOTA = 500;
 
 export interface Phase {
