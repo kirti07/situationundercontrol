@@ -17,7 +17,15 @@ const within = (
   return dx * dx + dy * dy <= radiusSquared;
 };
 
-export const smashWithin = (state: State, x: number, y: number, radiusSquared: number): number => {
+export interface Strike {
+  readonly x: number;
+  readonly y: number;
+  readonly radiusSquared: number;
+  readonly sympathy: number;
+}
+
+export const smashWithin = (state: State, strike: Strike): number => {
+  const { x, y, radiusSquared } = strike;
   let hits = 0;
   for (let slot = 0; slot < MAX_ACTIVE; slot += 1) {
     if (smashable(state, slot) && within(state, slot, x, y, radiusSquared)) {
@@ -26,7 +34,7 @@ export const smashWithin = (state: State, x: number, y: number, radiusSquared: n
     }
   }
   for (let i = 0; i < hits; i += 1) {
-    smashRoach(state, state.scratch[i] ?? 0);
+    smashRoach(state, state.scratch[i] ?? 0, strike.sympathy);
   }
   return hits;
 };

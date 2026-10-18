@@ -6,6 +6,7 @@ import {
   FIELD_WIDTH,
   InputKind,
   isOver,
+  LATHI_MAX,
   MAX_ACTIVE,
   RUN_TICKS,
   step,
@@ -46,6 +47,7 @@ describe('sim invariants', () => {
             [state.became >= before.became, 'became fell'],
             [state.control <= before.control, 'control rose'],
             [state.active <= MAX_ACTIVE, 'over the cap'],
+            [state.lathis >= 0 && state.lathis <= LATHI_MAX, 'lathis out of range'],
           ];
           broken.push(
             ...checks.filter(([ok]) => !ok).map(([, name]) => `${name} at ${String(state.tick)}`),

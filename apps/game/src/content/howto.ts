@@ -1,4 +1,4 @@
-import { Side } from '@suc/sim';
+import { CLIMB_THRESHOLD, LATHI_MAX, Side } from '@suc/sim';
 import type { IconName } from '../ui/icons.ts';
 
 export interface HowTo {
@@ -14,8 +14,8 @@ export const HOW_TO: Readonly<Record<Side, HowTo>> = {
     title: 'Join the Agency',
     lines: [
       'Tap a cockroach to smash it. It comes back as three, a little faster, at the metro.',
-      'Every smash raises Public Sympathy, and sympathy brings the lawns into the march.',
-      'Your Power unlocks at 6 PM. Hold the line as long as you can.',
+      'Every smash raises Public Sympathy, three times as much on camera (the lawns and the metro), and sympathy brings the lawns into the march.',
+      `You carry ${String(LATHI_MAX)} lathis; each tap spends one and they refill fast. Power unlocks at 6 PM.`,
     ],
     keys: [
       ['Click', 'Smash'],
@@ -27,12 +27,13 @@ export const HOW_TO: Readonly<Record<Side, HowTo>> = {
     icon: 'roach',
     title: 'Be the Cockroaches',
     lines: [
-      'Hold and drag: the swarm walks toward your finger. Let go and it marches up the lanes.',
-      'Canals cross only at the bridges and the metro. Barricades fall when 25 of you pile up.',
-      'Sit-in at the right moment and the stamps hit nobody. Reach the arch by 9 PM.',
+      'Hold and drag: roaches near your finger follow at full pace, and faster up close. Let go and they dawdle.',
+      `Canals cross only at the bridges and the metro. Pile ${String(CLIMB_THRESHOLD)} on a barricade and you climb over.`,
+      'Now and then a moment pops up: tap the fake protester or raise the right placard. Each win is a surge.',
     ],
     keys: [
-      ['Drag', 'Rally'],
+      ['Drag', 'Lead'],
+      ['1–2', 'Answer'],
       ['Space', 'Sit-in'],
       ['P', 'Pause'],
     ],

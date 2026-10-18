@@ -1,18 +1,22 @@
 import {
   ACT_MINUTE,
+  PERFECT_SIT_IN_JOINERS,
+  PERFECT_SIT_IN_SURGE,
+  PERFECT_SIT_IN_SYMPATHY,
   SIT_IN_CHARGE,
   SIT_IN_DURATION,
   SIT_IN_SYMPATHY,
-  SYMPATHY_MAX,
+  SUB,
   TICKS_PER_MINUTE,
 } from '../config.ts';
 import { solveField } from '../flow.ts';
 import type { Input } from '../input.ts';
 import { cellOf, NEAREST_OPEN } from '../map.ts';
-import { emit, EventKind, NOT_SCHEDULED, Side, type State } from '../state.ts';
+import { joinAt } from '../roaches.ts';
+import { addSympathy, emit, EventKind, NOT_SCHEDULED, Side, surge, type State } from '../state.ts';
 
-const STEERING_POINTER = 0;
 const ACT_TICK = ACT_MINUTE * TICKS_PER_MINUTE;
+const STEERING_POINTER = 0;
 
 const steers = (state: State, input: Input): boolean =>
   state.side === Side.Cockroach && input.pointer === STEERING_POINTER;
@@ -38,11 +42,21 @@ const sitInReady = (state: State): boolean =>
   state.tick >= ACT_TICK &&
   state.tick >= state.timers.sitInReadyAt;
 
+const stampWarning = (state: State): boolean => state.stamp.landsAt !== NOT_SCHEDULED;
+
+const joinAtStamp = (state: State): void => {
+  const { stamp } = state;
+  joinAt(state, Math.floor(stamp.x / SUB), Math.floor(stamp.y / SUB), PERFECT_SIT_IN_JOINERS);
+  emit(state, EventKind.PerfectSitIn, stamp.x, stamp.y, PERFECT_SIT_IN_JOINERS);
+  surge(state, PERFECT_SIT_IN_SURGE);
+};
+
 export const sitIn = (state: State): void => {
   if (!sitInReady(state)) return;
+  const perfect = stampWarning(state);
   state.timers.sitInUntil = state.tick + SIT_IN_DURATION;
   state.timers.sitInReadyAt = state.tick + SIT_IN_CHARGE;
-  state.sympathy = Math.min(SYMPATHY_MAX, state.sympathy + SIT_IN_SYMPATHY);
-  state.peakSympathy = Math.max(state.peakSympathy, state.sympathy);
+  addSympathy(state, perfect ? PERFECT_SIT_IN_SYMPATHY : SIT_IN_SYMPATHY);
   emit(state, EventKind.SitIn, 0, 0, SIT_IN_DURATION);
+  if (perfect) joinAtStamp(state);
 };

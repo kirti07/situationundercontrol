@@ -1,4 +1,10 @@
-import { CLOCK_START_MINUTE, editionDate, SYMPATHY_SCALE, TICKS_PER_MINUTE } from '@suc/sim';
+import {
+  CLOCK_START_MINUTE,
+  editionDate,
+  SYMPATHY_SCALE,
+  TICKS_PER_MINUTE,
+  TICKS_PER_SECOND,
+} from '@suc/sim';
 
 const MINUTES_PER_HOUR = 60;
 const HOURS_ON_DIAL = 12;
@@ -11,6 +17,9 @@ export const clockLabel = (tick: number): string => {
   const minute = String(minuteOfDay % MINUTES_PER_HOUR).padStart(2, '0');
   return `${String(hour)}:${minute} PM`;
 };
+
+export const secondsLabel = (ticks: number): string =>
+  `${String(Math.round(ticks / TICKS_PER_SECOND))} s`;
 
 export const countLabel = (value: number): string => value.toLocaleString('en-IN');
 

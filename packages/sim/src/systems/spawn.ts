@@ -10,8 +10,8 @@ import {
 } from '../config.ts';
 import { LANES, LAWN_LANES, LAWN_Y_MAX, LAWN_Y_MIN, ROADS } from '../map.ts';
 import { nextInt, nextRange } from '../rng.ts';
-import { drainOne, spawnAt, spawnAtMetro } from '../roaches.ts';
-import { silenced, type State } from '../state.ts';
+import { drainOne, metroHasRoom, spawnAt, spawnAtMetro } from '../roaches.ts';
+import { lawnsPaused, type State } from '../state.ts';
 
 const spawnMetro = (state: State, phase: Phase, minute: number): void => {
   if (state.tick % METRO_INTERVAL !== 0) return;
@@ -30,7 +30,7 @@ const spawnRoads = (state: State, phase: Phase): void => {
 };
 
 const spawnLawns = (state: State): void => {
-  if (silenced(state)) return;
+  if (lawnsPaused(state)) return;
   state.lawnAccumulator += state.sympathy;
   if (state.lawnAccumulator < LAWN_THRESHOLD) return;
   state.lawnAccumulator -= LAWN_THRESHOLD;
@@ -43,7 +43,7 @@ const spawnLawns = (state: State): void => {
 
 const drainQueue = (state: State): void => {
   const due = state.tick % QUEUE_DRAIN_INTERVAL === 0;
-  if (due && state.queued > 0 && state.freeCount > 0) drainOne(state);
+  if (due && state.queued > 0 && metroHasRoom(state)) drainOne(state);
 };
 
 export const spawnSystem = (state: State): void => {

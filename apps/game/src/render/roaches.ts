@@ -1,12 +1,14 @@
-import { MAX_ACTIVE, SUB, type State } from '@suc/sim';
+import { MAX_ACTIVE, MomentKind, NO_ANSWER, Pace, paceOf, Role, SUB, type State } from '@suc/sim';
 import type { Art, Frame } from './art.ts';
 import { PALETTE } from './palette.ts';
+import { drawTell } from './tells.ts';
 import { at } from './typed.ts';
 
 const HEIGHT = 30;
 const BOB = 1.4;
 const BOB_SPEED = 90;
 const FRESH_ALPHA = 0.6;
+const DAWDLE_ALPHA = 0.72;
 const SHADOW = 'rgba(0, 0, 0, 0.35)';
 const SPREAD_X = 11;
 const SPREAD_Y = 7;
@@ -19,11 +21,27 @@ interface Pose {
   frame: Frame | undefined;
   frozen: boolean;
   fresh: boolean;
+  dawdling: boolean;
+  tell: number;
 }
 
 export interface RoachPainter {
   readonly draw: (state: State, alpha: number, now: number) => void;
 }
+
+const fakeSlot = (state: State): number => {
+  const slot = state.moment.cards[1] ?? NO_ANSWER;
+  const showing =
+    state.moment.kind === MomentKind.Fake &&
+    state.roaches.alive[slot] === 1 &&
+    state.roaches.role[slot] === Role.Fake;
+  return showing ? slot : NO_ANSWER;
+};
+
+const tellOf = (state: State, slot: number): number => {
+  const fake = state.moment.kind === MomentKind.Fake && state.roaches.role[slot] === Role.Fake;
+  return fake ? (state.moment.cards[0] ?? NO_ANSWER) : NO_ANSWER;
+};
 
 const spread = (id: number, prime: number, range: number): number =>
   ((id * prime) % range) - Math.floor(range / 2);
@@ -46,6 +64,8 @@ export const createRoachPainter = (
     frame: undefined,
     frozen: false,
     fresh: false,
+    dawdling: false,
+    tell: NO_ANSWER,
   };
 
   const face = (slot: number, dx: number): number => {
@@ -68,6 +88,8 @@ export const createRoachPainter = (
     pose.frame = art.frames[roachId % art.frames.length];
     pose.frozen = at(frozenUntil, slot) > state.tick;
     pose.fresh = at(immuneUntil, slot) > state.tick;
+    pose.tell = tellOf(state, slot);
+    pose.dawdling = paceOf(state, slot) === Pace.Dawdle;
     return pose;
   };
 
@@ -80,7 +102,10 @@ export const createRoachPainter = (
     ctx.beginPath();
     ctx.ellipse(current.x, current.y + 1, width * 0.32, 2.4, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = current.fresh ? FRESH_ALPHA : 1;
+    ctx.globalAlpha = Math.min(
+      current.fresh ? FRESH_ALPHA : 1,
+      current.dawdling ? DAWDLE_ALPHA : 1,
+    );
     ctx.setTransform(s * current.facing, 0, 0, s, current.x * s, (current.y - current.bob) * s);
     ctx.drawImage(
       art.roaches,
@@ -94,14 +119,18 @@ export const createRoachPainter = (
       HEIGHT,
     );
     ctx.globalAlpha = 1;
+    if (current.tell !== NO_ANSWER) drawTell(ctx, current.tell, current.facing);
   };
 
   return {
     draw: (state, alpha, now) => {
       const s = scale();
+      const fake = fakeSlot(state);
       for (let slot = 0; slot < MAX_ACTIVE; slot += 1) {
-        if (state.roaches.alive[slot] === 1) paint(measure(state, slot, alpha, now), s);
+        if (state.roaches.alive[slot] === 1 && slot !== fake)
+          paint(measure(state, slot, alpha, now), s);
       }
+      if (fake !== NO_ANSWER) paint(measure(state, fake, alpha, now), s);
       ctx.setTransform(s, 0, 0, s, 0, 0);
     },
   };

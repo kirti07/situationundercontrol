@@ -9,8 +9,7 @@ const SIDE_PARAM: Readonly<Record<Side, string>> = {
   [Side.Cockroach]: 'cockroach',
 };
 
-export const shareLink = (side: Side): string =>
-  `${window.location.origin}/?side=${SIDE_PARAM[side]}`;
+const shareLink = (side: Side): string => `${window.location.origin}/?side=${SIDE_PARAM[side]}`;
 
 const copy = async (text: string): Promise<ShareOutcome> => {
   try {

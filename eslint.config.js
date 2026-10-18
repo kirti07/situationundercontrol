@@ -84,7 +84,7 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
-    files: ['**/*.config.ts', '**/*.config.js', 'eslint.config.js'],
+    files: ['**/*.config.ts', '**/*.config.js', 'eslint.config.js', 'knip.ts'],
     rules: { 'no-restricted-exports': 'off' },
   },
   {

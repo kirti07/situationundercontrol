@@ -3,12 +3,16 @@ import {
   EventKind,
   FREEZE_DURATION,
   FREEZE_RADIUS,
+  Side,
   SUB,
   TICKS_PER_SECOND,
   type State,
 } from '@suc/sim';
+import { backfirePainter } from './backfire.ts';
 import { drawPill, drawStamp, PILLS } from './labels.ts';
+import { MOMENT_PAINTERS } from './momentEffects.ts';
 import { at } from './typed.ts';
+import type { Painter } from './painter.ts';
 import { PALETTE } from './palette.ts';
 
 const CAPACITY = 64;
@@ -24,20 +28,17 @@ interface Pool {
   next: number;
 }
 
-interface Painter {
-  readonly life: number;
-  readonly draw: (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    value: number,
-    age: number,
-  ) => void;
-}
-
 export interface EffectLabels {
   readonly power: string;
 }
+
+export interface EffectOptions {
+  readonly labels: EffectLabels;
+  readonly side: Side;
+  readonly reducedMotion: () => boolean;
+}
+
+type PainterTable = Readonly<Partial<Record<number, Painter>>>;
 
 const ring = (
   ctx: CanvasRenderingContext2D,
@@ -53,7 +54,7 @@ const ring = (
   ctx.stroke();
 };
 
-const painters = (labels: EffectLabels): Readonly<Partial<Record<number, Painter>>> => ({
+const sharedPainters = (labels: EffectLabels): PainterTable => ({
   [EventKind.Tap]: {
     life: 700,
     draw: (ctx, x, y, hits, age) => {
@@ -62,6 +63,18 @@ const painters = (labels: EffectLabels): Readonly<Partial<Record<number, Painter
         return;
       }
       drawStamp(ctx, x, y - 22, 'SMASHED', `${String(hits)} → ${String(hits * 3)}`, PALETTE.agency);
+    },
+  },
+  [EventKind.Filmed]: {
+    life: 1100,
+    draw: (ctx, x, y, hits) => {
+      drawPill(ctx, x, y - 48, `ON CAMERA · +${String(hits * 3)} SYMPATHY`, PILLS.alarm, 0.05);
+    },
+  },
+  [EventKind.Empty]: {
+    life: 500,
+    draw: (ctx, x, y) => {
+      drawPill(ctx, x, y - 16, 'OUT OF LATHIS', PILLS.alarm);
     },
   },
   [EventKind.Muted]: {
@@ -79,7 +92,7 @@ const painters = (labels: EffectLabels): Readonly<Partial<Record<number, Painter
   [EventKind.Climb]: {
     life: 1400,
     draw: (ctx, _x, y) => {
-      drawPill(ctx, BANNER.x, y - 18, 'Over the barricade!', PILLS.rally);
+      drawPill(ctx, BANNER.x, y - 18, 'Over the barricade!', PILLS.swarm);
     },
   },
   [EventKind.Backfire]: {
@@ -113,7 +126,7 @@ const painters = (labels: EffectLabels): Readonly<Partial<Record<number, Painter
   [EventKind.SitIn]: {
     life: 1600,
     draw: (ctx) => {
-      drawPill(ctx, BANNER.x, BANNER.y + 18, 'SIT-IN · UNTOUCHABLE', PILLS.rally);
+      drawPill(ctx, BANNER.x, BANNER.y + 18, 'SIT-IN · UNTOUCHABLE', PILLS.swarm);
     },
   },
   [EventKind.Enter]: {
@@ -129,8 +142,16 @@ export interface Effects {
   readonly draw: (ctx: CanvasRenderingContext2D, now: number) => void;
 }
 
-export const createEffects = (labels: EffectLabels): Effects => {
-  const table = painters(labels);
+const SIDE_PAINTERS: Readonly<Record<Side, (options: EffectOptions) => PainterTable>> = {
+  [Side.Agency]: (options) => ({ [EventKind.Smash]: backfirePainter(options.reducedMotion) }),
+  [Side.Cockroach]: () => MOMENT_PAINTERS,
+};
+
+export const createEffects = (options: EffectOptions): Effects => {
+  const table: PainterTable = {
+    ...sharedPainters(options.labels),
+    ...SIDE_PAINTERS[options.side](options),
+  };
   const pool: Pool = {
     kind: new Int8Array(CAPACITY),
     x: new Float32Array(CAPACITY),

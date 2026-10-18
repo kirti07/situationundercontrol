@@ -15,6 +15,12 @@ export const Sound = {
   Sting: 11,
   Chime: 12,
   Gong: 13,
+  Empty: 14,
+  Shutter: 15,
+  Whoosh: 16,
+  Call: 17,
+  Sus: 18,
+  Surge: 19,
 } as const;
 export type Sound = (typeof Sound)[keyof typeof Sound];
 
@@ -161,6 +167,78 @@ export const RECIPES: Readonly<Record<Sound, Recipe>> = {
         tone(voice, at, { wave: 'sine', from: note, delay, length: 1.4, gain: 0.1 });
         tone(voice, at, { wave: 'triangle', from: note * 2, delay, length: 0.5, gain: 0.02 });
       });
+    },
+  },
+  [Sound.Empty]: {
+    gap: 0.12,
+    play: (voice, at) => {
+      noise(voice, at, { filter: 'bandpass', from: 900, q: 6, length: 0.04, gain: 0.12 });
+      tone(voice, at, {
+        wave: 'square',
+        from: 180,
+        to: 140,
+        length: 0.05,
+        gain: 0.03,
+        cutoff: 1200,
+      });
+    },
+  },
+  [Sound.Shutter]: {
+    gap: 0.4,
+    play: (voice, at) => {
+      noise(voice, at, { filter: 'highpass', from: 2400, length: 0.03, gain: 0.25 });
+      noise(voice, at, { filter: 'highpass', from: 1800, delay: 0.07, length: 0.05, gain: 0.2 });
+    },
+  },
+  [Sound.Whoosh]: {
+    gap: 0.15,
+    play: (voice, at) => {
+      noise(voice, at, {
+        filter: 'bandpass',
+        from: 1600,
+        to: 380,
+        q: 1.5,
+        delay: 0.08,
+        attack: 0.05,
+        length: 0.4,
+        gain: 0.12,
+      });
+    },
+  },
+  [Sound.Call]: {
+    gap: 0.3,
+    play: (voice, at) => {
+      tone(voice, at, { wave: 'triangle', from: 392, to: 784, length: 0.22, gain: 0.08 });
+      tone(voice, at, { wave: 'triangle', from: 523, delay: 0.24, length: 0.18, gain: 0.07 });
+    },
+  },
+  [Sound.Sus]: {
+    gap: 0.4,
+    play: (voice, at) => {
+      tone(voice, at, { wave: 'square', from: 880, length: 0.1, gain: 0.05, cutoff: 2400 });
+      tone(voice, at, {
+        wave: 'square',
+        from: 659,
+        delay: 0.12,
+        length: 0.18,
+        gain: 0.05,
+        cutoff: 2400,
+      });
+    },
+  },
+  [Sound.Surge]: {
+    gap: 0.5,
+    play: (voice, at) => {
+      noise(voice, at, {
+        filter: 'bandpass',
+        from: 400,
+        to: 1600,
+        q: 1.2,
+        attack: 0.1,
+        length: 0.5,
+        gain: 0.2,
+      });
+      tone(voice, at, { wave: 'triangle', from: 330, to: 660, length: 0.45, gain: 0.06 });
     },
   },
   [Sound.Gong]: {

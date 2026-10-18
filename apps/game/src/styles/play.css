@@ -335,6 +335,35 @@
   transform: scaleX(0);
 }
 
+.tile__pips {
+  position: absolute;
+  top: calc(var(--u) * 7);
+  right: calc(var(--u) * 8);
+  display: flex;
+  gap: calc(var(--u) * 3);
+}
+
+.tile__pip {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 12);
+  border-radius: calc(var(--u) * 2);
+  background: var(--paper);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.tile__pip.is-spent {
+  opacity: 0.25;
+  transform: scaleY(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile__pip {
+    transition: none;
+  }
+}
+
 .tile__status {
   position: absolute;
   top: calc(var(--u) * 5);
@@ -391,6 +420,146 @@
 .bottom-bar__progress {
   font-family: var(--font-date);
   color: var(--marigold);
+}
+
+.moments {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.moment {
+  font-family: var(--font-ui);
+}
+
+.moment--panel,
+.moment--banner {
+  position: absolute;
+  left: calc(var(--u) * 12);
+  right: calc(var(--u) * 12);
+  display: grid;
+  gap: calc(var(--u) * 6);
+  padding: calc(var(--u) * 10) calc(var(--u) * 12) calc(var(--u) * 12);
+  border: calc(var(--u) * 2) solid var(--ink);
+  border-radius: calc(var(--u) * 10);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: calc(var(--u) * 3) calc(var(--u) * 3) 0 var(--ink);
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.moment--panel {
+  top: calc(var(--u) * 300);
+}
+
+.moment--banner {
+  top: calc(var(--u) * 118);
+  background: var(--red);
+  color: var(--paper);
+}
+
+.moment--duel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.moment__title {
+  margin: 0;
+  font-family: var(--font-date);
+  font-size: calc(var(--u) * 11);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.moment__hint {
+  margin: 0;
+  font-size: calc(var(--u) * 13);
+  font-weight: 600;
+}
+
+.moment__options {
+  display: grid;
+  gap: calc(var(--u) * 6);
+}
+
+.moment__options--placards {
+  grid-template-columns: 1fr 1fr;
+}
+
+.moment__option {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 8);
+  min-height: calc(var(--u) * 38);
+  padding: calc(var(--u) * 6) calc(var(--u) * 10);
+  border: calc(var(--u) * 1.5) solid var(--ink);
+  border-radius: calc(var(--u) * 8);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: calc(var(--u) * 13);
+  font-weight: 600;
+  text-align: left;
+}
+
+.moment__option:active {
+  background: var(--marigold);
+}
+
+.moment__key {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--u) * 18);
+  height: calc(var(--u) * 18);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: calc(var(--u) * 10);
+}
+
+.moment__timer {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--u) * 4);
+  background: var(--ink-faint);
+}
+
+.moment__timer-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: left;
+}
+
+.moment--banner .moment__timer-fill {
+  background: var(--paper);
+}
+
+.moment__ticker {
+  position: absolute;
+  inset: calc(var(--u) * 114) 0 auto;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 8);
+  margin: 0;
+  padding: calc(var(--u) * 6) calc(var(--u) * 12);
+  background: var(--red);
+  color: var(--paper);
+  font-weight: 700;
+  font-size: calc(var(--u) * 12);
+}
+
+.moment__channel {
+  flex: none;
+  padding: calc(var(--u) * 2) calc(var(--u) * 6);
+  background: var(--paper);
+  color: var(--red);
+  font-family: var(--font-date);
+  font-size: calc(var(--u) * 9);
 }
 
 .pause {

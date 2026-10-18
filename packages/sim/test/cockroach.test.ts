@@ -8,12 +8,23 @@ import {
   EventKind,
   EVENT_STRIDE,
   InputKind,
+  MAX_ACTIVE,
+  Pace,
+  paceOf,
+  MARCH_DENOMINATOR,
+  MARCH_NUMERATOR,
+  NOT_SCHEDULED,
+  PERFECT_SIT_IN_JOINERS,
+  PERFECT_SIT_IN_SYMPATHY,
   RoachMode,
+  Side,
   SIT_IN_CHARGE,
   SIT_IN_DURATION,
   SIT_IN_SYMPATHY,
   STAMP_INTERVAL,
+  STAMP_SYMPATHY,
   STAMP_WARNING,
+  STRAY_TICKS,
   step,
   SUB,
   TICKS_PER_MINUTE,
@@ -42,33 +53,89 @@ const eventsOf = (state: State, kind: number): number[] =>
 
 const cockroachRun = (): State => createRun(COCKROACH);
 
-describe('steering', () => {
-  it('walks the swarm toward the first finger', () => {
-    const state = cockroachRun();
-    step(state, [input(state, InputKind.Steer, 66, 500)]);
-    advance(state, 1200);
-    const starters = aliveSlots(state).filter((slot) => (state.roaches.id[slot] ?? 0) < 30);
-    const near = starters.filter((slot) => (state.roaches.x[slot] ?? 0) < 84 * SUB);
-    expect(near.length).toBe(starters.length);
+describe('the march', () => {
+  it('walks unled cockroach-side roaches at two-sevenths of the Agency pace', () => {
+    const march = (setup: typeof COCKROACH): number => {
+      const state = createRun(setup);
+      spawnAt(state, 180, 500);
+      const slot = state.free[state.freeCount] ?? 0;
+      const before = state.roaches.y[slot] ?? 0;
+      advance(state, 60);
+      return before - (state.roaches.y[slot] ?? 0);
+    };
+    const walked = march(COCKROACH);
+    const ran = march({ ...COCKROACH, side: Side.Agency });
+    expect(walked).toBeGreaterThan(0);
+    expect(Math.abs(walked * MARCH_DENOMINATOR - ran * MARCH_NUMERATOR)).toBeLessThan(SUB * 2);
   });
 
-  it('ignores the second finger', () => {
-    const state = cockroachRun();
-    step(state, [input(state, InputKind.Steer, 60, 500, 1)]);
-    expect(state.steering.cell).toBe(-1);
-  });
-
-  it('routes a finger on a canal to the nearest open ground', () => {
+  it('places perfect sit-in joiners on open ground, never in a canal', () => {
     const canal = cellOf(90, 300);
     expect(PASSABLE[canal]).toBe(0);
     expect(PASSABLE[NEAREST_OPEN[canal] ?? 0]).toBe(1);
   });
+});
 
-  it('marches straight up again when the finger lifts', () => {
+describe('drag to lead', () => {
+  const emptyRun = (): State => {
     const state = cockroachRun();
-    step(state, [input(state, InputKind.Steer, 60, 500)]);
+    state.roaches.alive.fill(0);
+    state.free.set(Int32Array.from({ length: MAX_ACTIVE }, (_, i) => MAX_ACTIVE - 1 - i));
+    state.freeCount = MAX_ACTIVE;
+    state.active = 0;
+    return state;
+  };
+  const steer = (state: State, x: number, y: number): void => {
+    step(state, [input(state, InputKind.Steer, x, y)]);
+  };
+
+  it('walks roaches inside the rally circle through the finger', () => {
+    const state = emptyRun();
+    spawnAt(state, 180, 560);
+    steer(state, 180, 480);
+    const [slot = 0] = aliveSlots(state);
+    const gaps = Array.from({ length: 300 }, () => {
+      step(state, []);
+      return Math.abs((state.roaches.y[slot] ?? 0) / SUB - 480);
+    });
+    expect(Math.min(...gaps)).toBeLessThan(12);
+  });
+
+  it('chants close to the finger and lets stragglers dawdle after the grace period', () => {
+    const state = emptyRun();
+    spawnAt(state, 180, 500);
+    spawnAt(state, 66, 560);
+    steer(state, 180, 480);
+    const [near = 0, far = 0] = aliveSlots(state);
+    expect(paceOf(state, near)).toBe(Pace.Chant);
+    expect(paceOf(state, far)).toBe(Pace.March);
+    advance(state, STRAY_TICKS + 1);
+    expect(paceOf(state, far)).toBe(Pace.Dawdle);
+  });
+
+  it('carries roaches already past the finger on toward the arch', () => {
+    const state = emptyRun();
+    spawnAt(state, 180, 300);
+    steer(state, 180, 380);
+    const [slot = 0] = aliveSlots(state);
+    const before = state.roaches.y[slot] ?? 0;
+    advance(state, 60);
+    expect(state.roaches.y[slot] ?? 0).toBeLessThan(before);
+  });
+
+  it('drops the rally point when the finger lifts, and the swarm dawdles', () => {
+    const state = emptyRun();
+    spawnAt(state, 180, 500);
+    steer(state, 180, 480);
     step(state, [input(state, InputKind.SteerEnd)]);
-    expect(state.steering.cell).toBe(-1);
+    expect(state.steering.cell).toBe(NOT_SCHEDULED);
+    expect(paceOf(state, aliveSlots(state)[0] ?? 0)).toBe(Pace.Dawdle);
+  });
+
+  it('never slows Agency roaches', () => {
+    const state = createRun({ ...COCKROACH, side: Side.Agency });
+    advance(state, 2);
+    expect(paceOf(state, aliveSlots(state)[0] ?? 0)).toBe(Pace.March);
   });
 });
 
@@ -86,7 +153,7 @@ describe('Sit-in', () => {
     expect(state.timers.sitInUntil).toBe(0);
   });
 
-  it('stops the swarm for 4 s and adds 10 Sympathy', () => {
+  it('stops the swarm for 2 s and adds 25 Sympathy', () => {
     const state = sitInAt6();
     expect(state.timers.sitInUntil).toBe(state.tick - 1 + SIT_IN_DURATION);
     expect(state.sympathy).toBeGreaterThanOrEqual(SIT_IN_SYMPATHY);
@@ -108,13 +175,43 @@ describe('Sit-in', () => {
     expect(state.timers.sitInUntil).toBeGreaterThan(until);
   });
 
-  it('wins against a stamp landing on the same tick', () => {
+  const atWarning = (): State => {
     const state = cockroachRun();
     advance(state, ACT_MINUTE * TICKS_PER_MINUTE);
+    while (state.stamp.landsAt === NOT_SCHEDULED) step(state, []);
+    return state;
+  };
+
+  it('is perfect under a stamp warning: double Sympathy, joiners, and the stamp bounces', () => {
+    const state = atWarning();
+    const became = state.became;
+    const sympathy = state.sympathy;
+    step(state, [input(state, InputKind.SitIn)]);
+    expect(state.sympathy - sympathy).toBe(PERFECT_SIT_IN_SYMPATHY);
+    expect(state.became - became).toBeGreaterThanOrEqual(PERFECT_SIT_IN_JOINERS);
+    expect(eventsOf(state, EventKind.PerfectSitIn)).toHaveLength(1);
+    const smashes = state.smashes;
+    while (state.stamp.landsAt !== NOT_SCHEDULED) step(state, []);
+    expect(state.smashes).toBe(smashes);
+  });
+
+  it('is still perfect on the tick the stamp lands, and the stamp bounces', () => {
+    const state = atWarning();
     while (state.stamp.landsAt !== state.tick) step(state, []);
     const smashes = state.smashes;
     step(state, [input(state, InputKind.SitIn)]);
+    expect(eventsOf(state, EventKind.PerfectSitIn)).toHaveLength(1);
+    expect(eventsOf(state, EventKind.Bounce)).toHaveLength(1);
     expect(state.smashes).toBe(smashes);
+  });
+
+  it('is an ordinary sit-in with no stamp coming', () => {
+    const state = atWarning();
+    while (state.stamp.landsAt !== NOT_SCHEDULED) step(state, []);
+    const sympathy = state.sympathy;
+    step(state, [input(state, InputKind.SitIn)]);
+    expect(state.sympathy - sympathy).toBe(SIT_IN_SYMPATHY);
+    expect(eventsOf(state, EventKind.PerfectSitIn)).toHaveLength(0);
   });
 });
 
@@ -129,6 +226,7 @@ describe('Agency AI', () => {
     step(state, []);
     expect(eventsOf(state, EventKind.StampLand)).toHaveLength(1);
     expect(state.smashes).toBeGreaterThan(0);
+    expect(state.sympathy).toBe(state.smashes * STAMP_SYMPATHY);
   });
 
   it('adds a barricade every 30 s, at most 3', () => {

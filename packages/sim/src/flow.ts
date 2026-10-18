@@ -19,7 +19,7 @@ export const NO_DIRECTION = 0;
 
 const STILL: Direction = { dc: 0, dr: 0, dx: 0, dy: 0, cost: 0 };
 
-export const DIRECTIONS: readonly Direction[] = [
+const DIRECTIONS: readonly Direction[] = [
   STILL,
   { dc: 0, dr: -1, dx: 0, dy: -256, cost: ORTHOGONAL },
   { dc: 1, dr: 0, dx: 256, dy: 0, cost: ORTHOGONAL },
@@ -52,7 +52,7 @@ const open = (col: number, row: number): boolean =>
   row < GRID_ROWS &&
   PASSABLE[row * GRID_COLS + col] === 1;
 
-export const neighbour = (cell: number, index: number): number => {
+const neighbour = (cell: number, index: number): number => {
   const { dc, dr } = direction(index);
   const col = (cell % GRID_COLS) + dc;
   const row = Math.floor(cell / GRID_COLS) + dr;

@@ -6,14 +6,16 @@ import { CHARACTERS } from '../content/roster.ts';
 import { SIDE_CLASS } from '../content/sides.ts';
 import { h } from '../dom.ts';
 import { todaysEdition } from '../edition.ts';
-import { bindKeys } from '../input/keyboard.ts';
+import { bindKeys, type KeyBindings } from '../input/keyboard.ts';
 import { bindPointers, type PointerHandlers } from '../input/pointer.ts';
 import { createCaptionStrip } from '../play/caption-strip.ts';
 import { createCaptionDirector } from '../play/captions.ts';
+import { createGagDirector } from '../play/gags.ts';
 import { createControls } from '../play/controls.ts';
 import { createHaptics } from '../play/haptics.ts';
 import { createHud } from '../play/hud.ts';
 import { createLoop } from '../play/loop.ts';
+import { createMomentOverlay } from '../play/moments/overlay.ts';
 import { createPauseOverlay } from '../play/pause.ts';
 import { createRails } from '../play/rails.ts';
 import { advanceSession, createSession, queueInput, type Session } from '../play/session.ts';
@@ -41,6 +43,22 @@ const POINTER_HANDLERS: Readonly<Record<Side, (session: Session) => PointerHandl
   [Side.Cockroach]: createSteerer,
 };
 
+const ANSWER_KEYS = ['1', '2'] as const;
+
+const SIDE_KEYS: Readonly<Record<Side, (session: Session) => KeyBindings>> = {
+  [Side.Agency]: () => ({}),
+  [Side.Cockroach]: (session) => ({
+    ...Object.fromEntries(
+      ANSWER_KEYS.map((key, option) => [
+        key,
+        () => {
+          queueInput(session, InputKind.Answer, 0, option, 0);
+        },
+      ]),
+    ),
+  }),
+};
+
 const summarise = (state: State, edition: number): RunSummary => ({
   side: state.side,
   edition,
@@ -52,6 +70,8 @@ const summarise = (state: State, edition: number): RunSummary => ({
   became: state.became,
   swarm: swarmOf(state),
   peakSympathy: state.peakSympathy,
+  momentsWon: state.moment.won,
+  momentsClosed: state.moment.closed,
 });
 
 interface PlayView {
@@ -75,12 +95,15 @@ const start = async (view: PlayView, signal: AbortSignal): Promise<void> => {
   const hud = createHud(session.state, [soundToggle(audio)]);
   const strip = createCaptionStrip(session.state);
   const controls = createControls(session);
+  const moments = createMomentOverlay(session);
   const rails = createRails(session.state, session.edition);
   const director = createCaptionDirector(session.state);
+  const gags = createGagDirector(params.side, session.edition);
   const renderer = createCanvasRenderer(canvas, {
     art,
     labels: { power: CHARACTERS[params.character].power },
     reducedMotion: () => reducedMotion.matches,
+    side: params.side,
   });
   const caption = (line: string | null): void => {
     if (line === null) return;
@@ -92,13 +115,14 @@ const start = async (view: PlayView, signal: AbortSignal): Promise<void> => {
       const running = advanceSession(session);
       renderer.ingest(session.state, performance.now());
       sound.observe(session.state);
-      caption(director.observe(session.state));
+      caption(director.observe(session.state) ?? gags.observe(session.state));
       return running;
     },
     frame: (alpha, now) => {
       renderer.draw(session.state, alpha, now);
       hud.update(session.state);
       controls.update(session.state);
+      moments.update(session.state);
       rails.update(session.state);
     },
     finished: () => {
@@ -119,7 +143,7 @@ const start = async (view: PlayView, signal: AbortSignal): Promise<void> => {
     vibrationSettings(haptics),
   );
   hud.onPause(overlay.pause);
-  stage.append(hud.element, strip.element, controls.element, overlay.element);
+  stage.append(hud.element, moments.element, strip.element, controls.element, overlay.element);
   element.prepend(rails.left);
   element.append(rails.right);
   stage.classList.remove('is-loading');
@@ -129,7 +153,13 @@ const start = async (view: PlayView, signal: AbortSignal): Promise<void> => {
   document.addEventListener('keydown', audio.unlock, { signal });
   bindPointers(canvas, POINTER_HANDLERS[params.side](session), signal);
   bindKeys(
-    { p: overlay.pause, P: overlay.pause, Escape: overlay.pause, ' ': controls.trigger },
+    {
+      ...SIDE_KEYS[params.side](session),
+      p: overlay.pause,
+      P: overlay.pause,
+      Escape: overlay.pause,
+      ' ': controls.trigger,
+    },
     signal,
   );
   document.addEventListener(

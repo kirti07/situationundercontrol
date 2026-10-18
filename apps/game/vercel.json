@@ -5,9 +5,6 @@
   "buildCommand": "pnpm --filter @suc/game... build",
   "outputDirectory": "dist",
   "regions": ["bom1"],
-  "functions": {
-    "api/*.ts": { "maxDuration": 10 }
-  },
   "headers": [
     {
       "source": "/(.*)",

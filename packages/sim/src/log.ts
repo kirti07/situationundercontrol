@@ -3,7 +3,7 @@ import { HAS_POINT, INPUT_KINDS, type Input } from './input.ts';
 import { Character, Side } from './state.ts';
 
 export const MAX_LOG_BYTES = 32768;
-export const MAX_LOG_EVENTS = 20000;
+const MAX_LOG_EVENTS = 20000;
 export const RUN_ID_BYTES = 16;
 
 const MAGIC = [0x53, 0x55, 0x43, 0x01];
@@ -67,8 +67,11 @@ const check: (condition: boolean, reason: string) => asserts condition = (condit
 
 class Reader {
   private offset = 0;
+  private readonly bytes: Uint8Array;
 
-  constructor(private readonly bytes: Uint8Array) {}
+  constructor(bytes: Uint8Array) {
+    this.bytes = bytes;
+  }
 
   byte(): number {
     const value = this.bytes[this.offset];

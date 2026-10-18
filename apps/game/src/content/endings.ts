@@ -14,6 +14,8 @@ export interface RunSummary {
   readonly became: number;
   readonly swarm: number;
   readonly peakSympathy: number;
+  readonly momentsWon: number;
+  readonly momentsClosed: number;
 }
 
 export interface Stat {
@@ -44,8 +46,8 @@ const agencyStats = (run: RunSummary): readonly Stat[] => [
 
 const swarmStats = (run: RunSummary): readonly Stat[] => [
   { value: countLabel(run.reached), label: 'Arrived' },
+  { value: `${String(run.momentsWon)}/${String(run.momentsClosed)}`, label: 'Moments won' },
   { value: percentLabel(run.peakSympathy), label: 'Sympathy' },
-  { value: countLabel(run.became), label: 'Became' },
 ];
 
 const AGENCY_SHARE = (run: RunSummary): string =>

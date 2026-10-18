@@ -61,13 +61,19 @@ packages/sim/src
   config.ts         every tuning number in the PRD, plus SIM_VERSION
   rng.ts            seeded PRNG (sfc32), seed = hash("suc:" + IST date)
   fixed.ts          integer fixed-point maths (1/256 world unit)
-  map.ts            lanes, canals, bridges, precomputed flow fields
+  map.ts            lanes, canals, bridges, camera zones, the precomputed flow field to the arch
   state.ts          roaches as typed arrays (structure of arrays)
-  input.ts          Tap, Drag, Release, Power, SitIn, Listen; each stamped with a tick
-  systems/          clock, spawn, move, barricade, hydra, sympathy, powers, agencyAi, arch
+  input.ts          Tap, SitIn, Power, Listen, Answer, Steer, SteerEnd; each stamped with a tick
+  systems/          clock, spawn, move, barricade, hydra, sympathy, powers, lathis, agencyAi, arch,
+                    and moments (the cockroach side's scheduler and judge)
   step.ts           one tick: apply inputs, then systems in a fixed order
   result.ts         end conditions and score
   replay.ts         encode/decode input log (varint binary)
+
+packages/sim/balance
+  bots.ts           scripted strategies per side (idle, spam, restraint, powers, lead, Sit-in)
+  run.ts            plays a bot over daily editions and reports p25 / median / p75
+                    (`pnpm balance`; a 3-edition ordering check runs in CI)
 
 apps/game/src
   main.ts           boot, router
@@ -77,7 +83,8 @@ apps/game/src
   audio/            Web Audio, one sprite file
   net/              typed API client
   share/            card renderer (OffscreenCanvas), Web Share with fallback
-  content/          captions, strings and character roster as data
+  content/          captions, strings, character roster and moment cards (tells,
+                    headlines, placards, gags) as data
 
 apps/game/api
   run-start.ts      POST /api/run-start
@@ -99,6 +106,13 @@ apps/game/server
 - Integer maths only. No floats in state; `Math.sin`, `Math.sqrt` and friends are banned because results can differ between Safari and Chrome.
 - No `Date`, `Math.random` or `performance.now`. Every `sort` takes a total comparator (ties broken by roach id).
 - Inputs are applied at the start of the tick they're stamped with, before any system runs. This settles PRD edge cases like "Sit-in vs a landing stamp".
+
+**Cockroach moments.** The cockroach side is a run of one-tap moments (see the PRD). They follow the same rules as everything else in the sim, so runs stay replayable and verifiable:
+- **Scheduling is in the sim.** `systems/moments.ts` opens a moment when one is due and none is open, picks its kind for the phase of the evening, and closes it when its window ends or it is answered. Kind, cards and the fake protester's tell come from a second random stream seeded only by the edition, so every player that day sees the same moments whatever they do.
+- **Content is data, not logic.** The sim picks card indexes; `apps/game/src/content/moments.ts` holds the words. The card counts live in `config.ts`, and a test fails if the content and the counts disagree.
+- **Answers are inputs.** `Answer` carries the chosen option, and a `Tap` on the cockroach side accuses a roach (the client sends a Tap instead of a Steer while a fake moment is open). The sim judges them, then emits `MomentOpen`, `MomentResult` and `Surge` events.
+- **Rewards are sim state.** A surge is a timer (`timers.surgeUntil`) that `pace.ts` reads to make the whole swarm chant at 1.5x. Bystanders who join are ordinary spawns. The fake protester is an ordinary roach with a `role` column, so stamps, the cap and the hash treat him like everyone else.
+- **The client only presents.** `play/moments/` draws the cards and the ticker over the canvas, and `render/` draws the tells and the "SUS!" stamp. Nothing on screen decides an outcome.
 
 **Game loop.** Fixed 60 Hz sim with an accumulator, capped at 5 steps per frame so a slow frame can't spiral. Rendering runs on `requestAnimationFrame` and interpolates between the last two states. Pause stops the accumulator; the replay doesn't see wall time.
 
@@ -201,7 +215,8 @@ Caching (set in `vercel.json`): hashed files `public, max-age=31536000, immutabl
 
 | Layer | Tool | What it proves |
 | --- | --- | --- |
-| Sim unit | Vitest | Each system against the PRD rules: Hydra 1 to 3, climb at 25, Sympathy decay, every boundary-condition row |
+| Sim unit | Vitest | Each system against the PRD rules: Hydra 1 to 3, the climb threshold, Sympathy decay, the metro reserve, every boundary-condition row |
+| Balance | Vitest + `pnpm balance` | Smashing everything falls before doing nothing, which falls before restraint; the full table checks the PRD tuning targets |
 | Sim invariants | fast-check | Swarm never negative, Became never falls, Control never rises, active roaches never above 400 |
 | Determinism | Golden replays in Playwright on Chromium, WebKit and Firefox | The same input log gives the same state hash on every engine and in the Vercel Function |
 | API | Vitest, local Redis behind Upstash's REST proxy (SRH) in Docker | Routes, Redis keys and expiry, rejection of bad payloads (fuzzed) |
@@ -209,7 +224,7 @@ Caching (set in `vercel.json`): hashed files `public, max-age=31536000, immutabl
 | Budgets | size-limit, Lighthouse CI | Bundle sizes and LCP from the table above |
 | Load | k6 | 50,000 simulated players: run start and run upload hold p99 under 200 ms |
 
-**Delivery.** GitHub Actions on each pull request: lint, typecheck, tests, build, budgets, bundle secret scan. Vercel's Git integration builds a protected preview per pull request, wired to the Preview Redis database. Merges to `main` deploy to Production. Without Skew Protection (Hobby), the service worker precaches every hashed asset so an open tab keeps working across a deploy, and `/api/runs` rejects a mismatched `SIM_VERSION`. Instant Rollback is the undo. Secrets live in Vercel environment variables scoped to Production or Preview; the client has none.
+**Delivery.** GitHub Actions on each pull request: lint (ESLint, Prettier, dependency-cruiser, knip for dead code), typecheck, tests, build, budgets, bundle secret scan. Vercel's Git integration builds a protected preview per pull request, wired to the Preview Redis database. Merges to `main` deploy to Production. Without Skew Protection (Hobby), the service worker precaches every hashed asset so an open tab keeps working across a deploy, and `/api/runs` rejects a mismatched `SIM_VERSION`. Instant Rollback is the undo. Secrets live in Vercel environment variables scoped to Production or Preview; the client has none.
 
 ## Build plan
 
@@ -219,7 +234,7 @@ Each milestone ends deployed to a protected preview with CI green. Nothing is sk
 1. **Foundation.** Workspace, lint, dependency rules, CI, `vercel.json` headers, empty page deployed to a protected preview.
 2. **Sim core, Agency side.** Map, spawn, movement, Hydra, Sympathy, arch, clock, results. Headless, with unit and invariant tests and the replay format.
 3. **Playable greybox.** Canvas renderer, pointer input, fixed-step loop, Agency play screen with placeholder art. First feel test on a real low-end phone.
-4. **Cockroach side.** Drag steering on flow fields, Sit-in, Agency AI stamps and barricades.
+4. **Cockroach side.** Sit-in, Agency AI stamps and barricades. Drag steering on flow fields, with occasional moments on top (see Cockroach moments).
 5. **Powers.** Prime Time, Chanakya, Pradhan Sevak, with their backfires and the Actually Listen hold.
 6. **Screens and content.** Front page, roster, result, how to play, captions, audio, reduced motion, haptics.
 7. **Art and performance.** Atlas pipeline, final art, budget pass on the reference phone.

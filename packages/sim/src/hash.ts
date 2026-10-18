@@ -18,11 +18,38 @@ const counters = (state: State): number[] => [
   state.timers.powerReadyAt,
   state.timers.freezeEndsAt,
   state.timers.silencedUntil,
+  state.timers.lawnsPausedUntil,
   state.timers.sitInUntil,
   state.stamp.landsAt,
+  state.lathis,
+  state.timers.lathiRefillAt,
+  state.timers.surgeUntil,
+  state.moment.kind,
+  state.moment.opensAt,
+  state.moment.closesAt,
+  state.moment.nextAt,
+  state.moment.answer,
+  state.steering.cell,
+  state.moment.closed,
+  state.moment.won,
+  Number(state.stamp.calledOff),
+  Number(state.stamp.pinpointed),
+  Number(state.stamp.wide),
+  ...state.moment.cards,
 ];
 
-const ROACH_COLUMNS = ['id', 'x', 'y', 'gen', 'mode', 'frozenUntil'] as const;
+const BARRICADE_COLUMNS = ['lane', 'y', 'pile', 'expiresAt'] as const;
+
+const mixColumn = (hash: number, column: Iterable<number>): number => {
+  let current = hash;
+  for (const value of column) current = mix(current, value);
+  return current;
+};
+
+const mixBarricades = (state: State, hash: number): number =>
+  BARRICADE_COLUMNS.reduce((current, column) => mixColumn(current, state.barricades[column]), hash);
+
+const ROACH_COLUMNS = ['id', 'x', 'y', 'gen', 'mode', 'frozenUntil', 'role', 'strayTicks'] as const;
 
 const mixRoach = (state: State, hash: number, slot: number): number => {
   const alive = state.roaches.alive[slot] ?? 0;
@@ -33,7 +60,7 @@ const mixRoach = (state: State, hash: number, slot: number): number => {
 };
 
 export const hashState = (state: State): number => {
-  let hash = counters(state).reduce(mix, 0x811c9dc5);
+  let hash = mixBarricades(state, counters(state).reduce(mix, 0x811c9dc5));
   for (let slot = 0; slot < MAX_ACTIVE; slot += 1) {
     hash = mixRoach(state, hash, slot);
   }

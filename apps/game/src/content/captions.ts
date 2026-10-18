@@ -1,4 +1,4 @@
-import { Character } from '@suc/sim';
+import { Character, CLIMB_THRESHOLD } from '@suc/sim';
 
 export const CaptionCue = {
   Start: 0,
@@ -13,6 +13,11 @@ export const CaptionCue = {
   SitIn: 9,
   Barricade: 10,
   HundredReached: 11,
+  Filmed: 12,
+  Caught: 13,
+  Pinpointed: 14,
+  WrongAccuse: 15,
+  PerfectSitIn: 16,
 } as const;
 export type CaptionCue = (typeof CaptionCue)[keyof typeof CaptionCue];
 
@@ -23,10 +28,14 @@ const SWARM: Lines = {
   [CaptionCue.Stamp]: 'Lathi charge! Every stamp is three more of us. The lawns are watching.',
   [CaptionCue.SitIn]: 'Sit-in. Nobody moves, nobody gets stamped.',
   [CaptionCue.Barricade]: 'New barricade. Old trick. Pile up and climb.',
-  [CaptionCue.Climb]: 'Twenty-five on the barricade. Over we go.',
+  [CaptionCue.Climb]: `${String(CLIMB_THRESHOLD)} on the barricade. Over we go.`,
   [CaptionCue.Lights]: 'The arch lights up in the tricolour. Keep walking.',
   [CaptionCue.Rush]: 'Six roads open. All of them lead to the arch.',
   [CaptionCue.HundredReached]: 'A hundred under the arch. Peacefully.',
+  [CaptionCue.Caught]: 'Caught one. Plainclothes, terrible at slogans.',
+  [CaptionCue.Pinpointed]: 'The fake radioed in. Big stamp coming. Sit down!',
+  [CaptionCue.WrongAccuse]: 'That was Rohan from Hostel 4. He has gone home to sulk.',
+  [CaptionCue.PerfectSitIn]: 'Everyone sat. The stamp bounced. Bystanders joined in.',
 };
 
 const PRIME_TIME: Lines = {
@@ -38,6 +47,7 @@ const PRIME_TIME: Lines = {
   [CaptionCue.Backfire]: 'The clip has gone viral. Roaches are pouring in from all six roads.',
   [CaptionCue.Lights]: 'Lights on. Cameras on. Cockroaches also, unfortunately, on.',
   [CaptionCue.Rush]: 'We are getting reports of... more reports.',
+  [CaptionCue.Filmed]: 'That one was on camera. Tonight we will call it a deepfake.',
 };
 
 const CHANAKYA: Lines = {
@@ -48,6 +58,7 @@ const CHANAKYA: Lines = {
   [CaptionCue.Climb]: 'They are climbing the barricade, sir. Shall we barricade the climb?',
   [CaptionCue.Lights]: 'The arch is lit. Nobody informed the cockroaches.',
   [CaptionCue.Rush]: 'Detention capacity exceeded. Kindly detain fewer.',
+  [CaptionCue.Filmed]: 'Sir, the picnic crowd is filming. Kindly smash nearer the arch.',
 };
 
 const PRADHAN_SEVAK: Lines = {
@@ -57,6 +68,7 @@ const PRADHAN_SEVAK: Lines = {
   [CaptionCue.Power]: '"Today, let us talk about millets."',
   [CaptionCue.Lights]: 'Tricolour lights. Tricolour optics.',
   [CaptionCue.Rush]: 'Mitron, the situation is under control. Please do not look.',
+  [CaptionCue.Filmed]: 'Mitron, the cameras are on the lawns. Please smile.',
 };
 
 export const CAPTIONS: Readonly<Record<Character, Lines>> = {

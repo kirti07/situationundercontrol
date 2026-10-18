@@ -3,9 +3,11 @@ import {
   BACKFIRE_NUMERATOR,
   FREEZE_DURATION,
   FREEZE_RADIUS,
+  MASTERSTROKE_DURATION,
   MASTERSTROKE_Y,
   MAX_ACTIVE,
   POWER_CHARGE,
+  LAWN_PAUSE_DURATION,
   SILENCE_DURATION,
   SUB,
 } from '../config.ts';
@@ -42,12 +44,16 @@ const nationDemands = (state: State): void => {
 };
 
 const masterstroke = (state: State): void => {
-  for (let lane = 0; lane < LANE_COUNT; lane += 1) raiseBarricade(state, lane, MASTERSTROKE_Y);
+  const expiresAt = state.tick + MASTERSTROKE_DURATION;
+  for (let lane = 0; lane < LANE_COUNT; lane += 1) {
+    raiseBarricade(state, lane, MASTERSTROKE_Y, expiresAt);
+  }
 };
 
 const mannKiBaat = (state: State): void => {
   state.sympathy = 0;
   state.timers.silencedUntil = state.tick + SILENCE_DURATION;
+  state.timers.lawnsPausedUntil = state.tick + LAWN_PAUSE_DURATION;
 };
 
 const POWERS: Readonly<Record<Character, (state: State) => void>> = {

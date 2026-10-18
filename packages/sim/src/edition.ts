@@ -1,8 +1,8 @@
 import { hashString } from './rng.ts';
 
-export const EDITION_EPOCH = '2026-10-16';
-export const MS_PER_DAY = 86400000;
-export const IST_OFFSET_MS = 19800000;
+const EDITION_EPOCH = '2026-10-16';
+const MS_PER_DAY = 86400000;
+const IST_OFFSET_MS = 19800000;
 
 const pad = (value: number, width: number): string => String(value).padStart(width, '0');
 

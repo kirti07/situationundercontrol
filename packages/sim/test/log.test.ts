@@ -6,6 +6,8 @@ import {
   encodeRun,
   FIELD_HEIGHT,
   FIELD_WIDTH,
+  HAS_POINT,
+  INPUT_KINDS,
   InputKind,
   MAX_LOG_BYTES,
   RUN_ID_BYTES,
@@ -24,13 +26,19 @@ const header = {
   runId: new Uint8Array(RUN_ID_BYTES).fill(7),
 };
 
-const inputArbitrary = fc.record({
-  tick: fc.integer({ min: 0, max: RUN_TICKS - 1 }),
-  kind: fc.constant(InputKind.Tap),
-  pointer: fc.integer({ min: 0, max: 1 }),
-  x: fc.integer({ min: 0, max: FIELD_WIDTH }),
-  y: fc.integer({ min: 0, max: FIELD_HEIGHT }),
-});
+const inputArbitrary = fc
+  .record({
+    tick: fc.integer({ min: 0, max: RUN_TICKS - 1 }),
+    kind: fc.constantFrom(...INPUT_KINDS),
+    pointer: fc.integer({ min: 0, max: 1 }),
+    x: fc.integer({ min: 0, max: FIELD_WIDTH }),
+    y: fc.integer({ min: 0, max: FIELD_HEIGHT }),
+  })
+  .map((input) => ({
+    ...input,
+    x: HAS_POINT[input.kind] ? input.x : 0,
+    y: HAS_POINT[input.kind] ? input.y : 0,
+  }));
 
 const sortedInputs = fc
   .array(inputArbitrary, { maxLength: 300 })

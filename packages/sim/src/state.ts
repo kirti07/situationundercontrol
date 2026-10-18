@@ -4,9 +4,13 @@ import {
   BARRICADE_SLOTS,
   CONTROL_START,
   EVENT_CAPACITY,
+  FIRST_MOMENT_AT,
+  LATHI_MAX,
   MAX_ACTIVE,
   MAX_GENERATION,
+  MOMENT_SALT,
   POINTERS,
+  SYMPATHY_MAX,
   STAMP_INTERVAL,
   TAP_COOLDOWN,
   TICKS_PER_MINUTE,
@@ -14,38 +18,17 @@ import {
 import { createField, type FlowField } from './flow.ts';
 import { CELL_COUNT } from './map.ts';
 import { seedRng } from './rng.ts';
+import {
+  type Character,
+  EndReason,
+  EventKind,
+  MOMENT_CARDS,
+  MomentKind,
+  NO_ANSWER,
+  type Side,
+} from './kinds.ts';
 
-export const Side = { Agency: 0, Cockroach: 1 } as const;
-export type Side = (typeof Side)[keyof typeof Side];
-
-export const Character = { None: 0, PrimeTime: 1, Chanakya: 2, PradhanSevak: 3 } as const;
-export type Character = (typeof Character)[keyof typeof Character];
-
-export const EndReason = {
-  None: 0,
-  Overrun: 1,
-  Held: 2,
-  Listened: 3,
-  ReachedGate: 4,
-  NextExam: 5,
-} as const;
-export type EndReason = (typeof EndReason)[keyof typeof EndReason];
-
-export const EventKind = {
-  Tap: 1,
-  Smash: 2,
-  Enter: 3,
-  StampWarn: 4,
-  StampLand: 5,
-  Barricade: 6,
-  Climb: 7,
-  SitIn: 8,
-  Power: 9,
-  Backfire: 10,
-  Muted: 11,
-  Freeze: 12,
-} as const;
-export type EventKind = (typeof EventKind)[keyof typeof EventKind];
+export * from './kinds.ts';
 
 export const EVENT_STRIDE = 4;
 export const NO_BARRICADE = -1;
@@ -66,12 +49,15 @@ export interface Roaches {
   readonly heldBy: Int8Array;
   readonly immuneUntil: Int32Array;
   readonly frozenUntil: Int32Array;
+  readonly role: Uint8Array;
+  readonly strayTicks: Int32Array;
 }
 
 export interface Barricades {
   readonly lane: Int8Array;
   readonly y: Int32Array;
   readonly pile: Int32Array;
+  readonly expiresAt: Int32Array;
 }
 
 export interface Stamp {
@@ -79,12 +65,26 @@ export interface Stamp {
   y: number;
   landsAt: number;
   nextAt: number;
+  calledOff: boolean;
+  pinpointed: boolean;
+  wide: boolean;
 }
 
 export interface Steering {
   readonly field: FlowField;
   readonly goal: Uint8Array;
   cell: number;
+}
+
+export interface Moment {
+  kind: MomentKind;
+  opensAt: number;
+  closesAt: number;
+  nextAt: number;
+  readonly cards: Int16Array;
+  answer: number;
+  closed: number;
+  won: number;
 }
 
 export interface Timers {
@@ -95,8 +95,11 @@ export interface Timers {
   freezeEndsAt: number;
   frozenCount: number;
   silencedUntil: number;
+  lawnsPausedUntil: number;
   listenSince: number;
   roadCursor: number;
+  lathiRefillAt: number;
+  surgeUntil: number;
 }
 
 export interface RunSetup {
@@ -111,7 +114,9 @@ export interface State {
   readonly roaches: Roaches;
   readonly barricades: Barricades;
   readonly stamp: Stamp;
+  readonly moment: Moment;
   readonly steering: Steering;
+  readonly momentRng: Uint32Array;
   readonly timers: Timers;
   readonly free: Int32Array;
   readonly queue: Int32Array;
@@ -134,6 +139,7 @@ export interface State {
   became: number;
   reached: number;
   smashes: number;
+  lathis: number;
   endReason: EndReason;
   endTick: number;
 }
@@ -150,27 +156,51 @@ const createRoaches = (): Roaches => ({
   heldBy: new Int8Array(MAX_ACTIVE).fill(NO_BARRICADE),
   immuneUntil: new Int32Array(MAX_ACTIVE),
   frozenUntil: new Int32Array(MAX_ACTIVE),
+  role: new Uint8Array(MAX_ACTIVE),
+  strayTicks: new Int32Array(MAX_ACTIVE),
+});
+
+const createMoment = (): Moment => ({
+  kind: MomentKind.None,
+  opensAt: 0,
+  closesAt: 0,
+  nextAt: FIRST_MOMENT_AT,
+  cards: new Int16Array(MOMENT_CARDS),
+  answer: NO_ANSWER,
+  closed: 0,
+  won: 0,
 });
 
 const createBarricades = (): Barricades => ({
   lane: new Int8Array(BARRICADE_SLOTS).fill(NO_BARRICADE),
   y: new Int32Array(BARRICADE_SLOTS),
   pile: new Int32Array(BARRICADE_SLOTS),
+  expiresAt: new Int32Array(BARRICADE_SLOTS).fill(NOT_SCHEDULED),
 });
 
 const freeSlots = (): Int32Array =>
   Int32Array.from({ length: MAX_ACTIVE }, (_, i) => MAX_ACTIVE - 1 - i);
 
 export const DENSITY_COLS = 9;
-export const DENSITY_ROWS = 20;
+const DENSITY_ROWS = 20;
 
 export const createState = (setup: RunSetup): State => ({
   side: setup.side,
   character: setup.character,
   roaches: createRoaches(),
   barricades: createBarricades(),
-  stamp: { x: 0, y: 0, landsAt: NOT_SCHEDULED, nextAt: STAMP_INTERVAL },
+  stamp: {
+    x: 0,
+    y: 0,
+    landsAt: NOT_SCHEDULED,
+    nextAt: STAMP_INTERVAL,
+    calledOff: false,
+    pinpointed: false,
+    wide: false,
+  },
+  moment: createMoment(),
   steering: { field: createField(), goal: new Uint8Array(CELL_COUNT), cell: NOT_SCHEDULED },
+  momentRng: seedRng(setup.seed ^ MOMENT_SALT),
   timers: {
     sitInUntil: 0,
     sitInReadyAt: 0,
@@ -179,8 +209,11 @@ export const createState = (setup: RunSetup): State => ({
     freezeEndsAt: NOT_SCHEDULED,
     frozenCount: 0,
     silencedUntil: 0,
+    lawnsPausedUntil: 0,
     listenSince: NOT_SCHEDULED,
     roadCursor: 0,
+    lathiRefillAt: NOT_SCHEDULED,
+    surgeUntil: 0,
   },
   free: freeSlots(),
   queue: new Int32Array(MAX_GENERATION + 1),
@@ -203,6 +236,7 @@ export const createState = (setup: RunSetup): State => ({
   became: 0,
   reached: 0,
   smashes: 0,
+  lathis: LATHI_MAX,
   endReason: EndReason.None,
   endTick: 0,
 });
@@ -215,6 +249,22 @@ export const modeOf = (state: State, slot: number): RoachMode =>
 export const sitInActive = (state: State): boolean => state.tick < state.timers.sitInUntil;
 
 export const silenced = (state: State): boolean => state.tick < state.timers.silencedUntil;
+
+export const lawnsPaused = (state: State): boolean => state.tick < state.timers.lawnsPausedUntil;
+
+export const surging = (state: State): boolean => state.tick < state.timers.surgeUntil;
+
+export const addSympathy = (state: State, amount: number): void => {
+  state.sympathy = Math.max(0, Math.min(SYMPATHY_MAX, state.sympathy + amount));
+  state.peakSympathy = Math.max(state.peakSympathy, state.sympathy);
+};
+
+export const surge = (state: State, ticks: number): void => {
+  if (ticks === 0) return;
+  const { timers } = state;
+  timers.surgeUntil = Math.max(timers.surgeUntil, state.tick) + ticks;
+  emit(state, EventKind.Surge, 0, 0, ticks);
+};
 
 export const emit = (state: State, kind: EventKind, x: number, y: number, value: number): void => {
   if (state.eventCount >= EVENT_CAPACITY) return;

@@ -1,6 +1,15 @@
 import { CLIMB_CLEARANCE, CLIMB_THRESHOLD, MAX_ACTIVE, SUB } from '../config.ts';
+import { takeDown } from '../barricades.ts';
 import { laneAtSub } from '../map.ts';
-import { emit, EventKind, modeOf, NO_BARRICADE, RoachMode, type State } from '../state.ts';
+import {
+  emit,
+  EventKind,
+  modeOf,
+  NO_BARRICADE,
+  NOT_SCHEDULED,
+  RoachMode,
+  type State,
+} from '../state.ts';
 
 const crosses = (state: State, slot: number, barricade: number, lane: number): boolean => {
   const { roaches, barricades } = state;
@@ -55,12 +64,18 @@ const ROACH_STEP: Readonly<Record<RoachMode, (state: State, slot: number) => voi
   [RoachMode.Climbing]: finishClimb,
 };
 
+const expired = (state: State, barricade: number): boolean => {
+  const expiresAt = state.barricades.expiresAt[barricade] ?? NOT_SCHEDULED;
+  return expiresAt !== NOT_SCHEDULED && state.tick >= expiresAt;
+};
+
 export const barricadeSystem = (state: State): void => {
   const { roaches, barricades } = state;
   for (let slot = 0; slot < MAX_ACTIVE; slot += 1) {
     if (roaches.alive[slot] === 1) ROACH_STEP[modeOf(state, slot)](state, slot);
   }
   for (let barricade = 0; barricade < barricades.pile.length; barricade += 1) {
+    if (expired(state, barricade)) takeDown(state, barricade);
     if ((barricades.pile[barricade] ?? 0) >= CLIMB_THRESHOLD) climbOver(state, barricade);
   }
 };

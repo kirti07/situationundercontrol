@@ -19,6 +19,11 @@ const EVENT_CUES: Readonly<Partial<Record<number, CaptionCue>>> = {
   [EventKind.StampLand]: CaptionCue.Stamp,
   [EventKind.SitIn]: CaptionCue.SitIn,
   [EventKind.Barricade]: CaptionCue.Barricade,
+  [EventKind.Filmed]: CaptionCue.Filmed,
+  [EventKind.Caught]: CaptionCue.Caught,
+  [EventKind.Pinpointed]: CaptionCue.Pinpointed,
+  [EventKind.WrongAccuse]: CaptionCue.WrongAccuse,
+  [EventKind.PerfectSitIn]: CaptionCue.PerfectSitIn,
 };
 
 interface Milestone {

@@ -28,7 +28,7 @@ export const LANES: readonly LaneShape[] = [
   { minX: 276, maxX: 312, centerX: 294, jitter: 12 },
 ];
 
-export const OPEN_GROUND: readonly Rect[] = [
+const OPEN_GROUND: readonly Rect[] = [
   { x: 24, y: 120, w: 312, h: 144 },
   { x: 48, y: 264, w: 264, h: 336 },
   { x: 24, y: 600, w: 312, h: 24 },
@@ -46,9 +46,10 @@ export const BRIDGES: readonly Rect[] = [
   { x: 252, y: 408, w: 24, h: 24 },
 ];
 
-export const LAWNS: readonly Rect[] = [
+export const CAMERA_ZONES: readonly Rect[] = [
   { x: 48, y: 264, w: 36, h: 336 },
   { x: 276, y: 264, w: 36, h: 336 },
+  { x: 24, y: 576, w: 312, h: 48 },
 ];
 
 export const ARCH: Rect = { x: 156, y: 132, w: 48, h: 36 };
@@ -97,13 +98,20 @@ const buildArch = (): Uint8Array => {
   return mask;
 };
 
+const buildCamera = (): Uint8Array => {
+  const mask = new Uint8Array(CELL_COUNT);
+  markRects(mask, CAMERA_ZONES, 1);
+  return mask;
+};
+
 export const PASSABLE = buildPassable();
 export const ARCH_CELLS = buildArch();
+export const CAMERA_CELLS = buildCamera();
 
 const insideField = (x: number, y: number): boolean =>
   x >= 0 && y >= 0 && x < FIELD_WIDTH * SUB && y < FIELD_HEIGHT * SUB;
 
-export const NO_LANE = LANE_COUNT;
+const NO_LANE = LANE_COUNT;
 
 const laneAt = (x: number): number => {
   const lane = LANES.findIndex((shape) => x >= shape.minX && x < shape.maxX);

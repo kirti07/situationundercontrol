@@ -6,14 +6,8 @@ import {
 } from '../config.ts';
 import { ARCH_FIELD, direction, type FlowField } from '../flow.ts';
 import { cellOfSub, isPassableSub } from '../map.ts';
-import {
-  modeOf,
-  NOT_SCHEDULED,
-  RoachMode,
-  sitInActive,
-  type Roaches,
-  type State,
-} from '../state.ts';
+import { following, pacedSpeed, paceOf, trackStray } from '../pace.ts';
+import { modeOf, RoachMode, sitInActive, type Roaches, type State } from '../state.ts';
 
 const SPEED_BY_MODE: Readonly<Record<RoachMode, (speed: number) => number>> = {
   [RoachMode.Walking]: (speed) => speed,
@@ -39,27 +33,32 @@ const settle = (roaches: Roaches, slot: number, nx: number, ny: number): void =>
   if (isPassableSub(x, ny)) roaches.y[slot] = ny;
 };
 
-const advance = (state: State, field: FlowField, slot: number): void => {
+const passedFinger = (state: State, cell: number): boolean =>
+  (ARCH_FIELD.dist[cell] ?? 0) <= (ARCH_FIELD.dist[state.steering.cell] ?? 0);
+
+const fieldFor = (state: State, slot: number, cell: number): FlowField =>
+  following(state, slot) && !passedFinger(state, cell) ? state.steering.field : ARCH_FIELD;
+
+const advance = (state: State, slot: number): void => {
   const { roaches } = state;
   if ((roaches.frozenUntil[slot] ?? 0) > state.tick) return;
   const x = roaches.x[slot] ?? 0;
   const y = roaches.y[slot] ?? 0;
-  const heading = direction(field.dir[cellOfSub(x, y)] ?? 0);
+  const cell = cellOfSub(x, y);
+  const heading = direction(fieldFor(state, slot, cell).dir[cell] ?? 0);
   const base = SPEED_BY_GENERATION[roaches.gen[slot] ?? 0] ?? 0;
-  const speed = SPEED_BY_MODE[modeOf(state, slot)](base);
+  const speed = SPEED_BY_MODE[modeOf(state, slot)](pacedSpeed(base, paceOf(state, slot)));
   settle(roaches, slot, x + scaled(speed, heading.dx), y + scaled(speed, heading.dy));
 };
-
-const activeField = (state: State): FlowField =>
-  state.steering.cell === NOT_SCHEDULED ? ARCH_FIELD : state.steering.field;
 
 export const moveSystem = (state: State): void => {
   const { roaches } = state;
   roaches.px.set(roaches.x);
   roaches.py.set(roaches.y);
   if (sitInActive(state)) return;
-  const field = activeField(state);
   for (let slot = 0; slot < MAX_ACTIVE; slot += 1) {
-    if (roaches.alive[slot] === 1) advance(state, field, slot);
+    if (roaches.alive[slot] !== 1) continue;
+    trackStray(state, slot);
+    advance(state, slot);
   }
 };

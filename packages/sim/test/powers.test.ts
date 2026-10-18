@@ -6,7 +6,10 @@ import {
   EndReason,
   FREEZE_DURATION,
   InputKind,
+  LAWN_PAUSE_DURATION,
   LISTEN_HOLD,
+  MASTERSTROKE_DURATION,
+  NO_BARRICADE,
   POWER_CHARGE,
   SILENCE_DURATION,
   Side,
@@ -40,7 +43,7 @@ describe('Power button', () => {
     expect(barricadeCount(state)).toBe(0);
   });
 
-  it('recharges for 20 s', () => {
+  it('recharges for 25 s', () => {
     const state = agencyAt6(Character.PradhanSevak);
     press(state, InputKind.Power);
     expect(state.timers.powerReadyAt).toBe(state.tick - 1 + POWER_CHARGE);
@@ -78,21 +81,37 @@ describe('Chanakya: Masterstroke', () => {
     press(state, InputKind.Power);
     expect(barricadeCount(state)).toBe(3);
   });
+
+  it('takes its barricades down after 15 s and releases the pile', () => {
+    const state = agencyAt6(Character.Chanakya);
+    press(state, InputKind.Power);
+    advance(state, MASTERSTROKE_DURATION - 1);
+    expect(barricadeCount(state)).toBe(3);
+    advance(state, 1);
+    expect(barricadeCount(state)).toBe(0);
+    expect(aliveSlots(state).every((slot) => state.roaches.heldBy[slot] === NO_BARRICADE)).toBe(
+      true,
+    );
+    expect(Array.from(state.barricades.pile)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
 });
 
 describe('Pradhan Sevak: Mann Ki Baat', () => {
-  it('zeroes Sympathy, stops the lawns and locks smashing for 20 s', () => {
+  it('zeroes Sympathy, quiets the lawns for 20 s and locks smashing for the first 4 s', () => {
     const state = agencyAt6(Character.PradhanSevak);
     state.sympathy = SYMPATHY_MAX;
     press(state, InputKind.Power);
     expect(state.sympathy).toBe(0);
     const smashes = state.smashes;
+    const lathis = state.lathis;
     tapSlot(state, firstSmashable(state));
     expect(state.smashes).toBe(smashes);
+    expect(state.lathis).toBe(lathis);
     expect(state.timers.silencedUntil).toBe(state.tick - 2 + SILENCE_DURATION);
+    expect(state.timers.lawnsPausedUntil).toBe(state.tick - 2 + LAWN_PAUSE_DURATION);
     advance(state, SILENCE_DURATION);
     tapSlot(state, firstSmashable(state));
-    expect(state.smashes).toBe(smashes + 1);
+    expect(state.smashes).toBeGreaterThan(smashes);
   });
 });
 

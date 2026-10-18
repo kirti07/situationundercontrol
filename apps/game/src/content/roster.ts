@@ -1,7 +1,21 @@
-import { Character, Side } from '@suc/sim';
+import {
+  BACKFIRE_DENOMINATOR,
+  BACKFIRE_NUMERATOR,
+  Character,
+  CLIMB_THRESHOLD,
+  FREEZE_DURATION,
+  LAWN_PAUSE_DURATION,
+  MASTERSTROKE_DURATION,
+  Side,
+  SILENCE_DURATION,
+  SIT_IN_DURATION,
+} from '@suc/sim';
 import chanakyaArt from '../assets/art/chanakya.webp';
 import pradhanSevakArt from '../assets/art/pradhan-sevak.webp';
 import primeTimeArt from '../assets/art/prime-time.webp';
+import { secondsLabel } from './format.ts';
+
+const BACKFIRE_PERCENT = (BACKFIRE_NUMERATOR * 100) / BACKFIRE_DENOMINATOR;
 
 export interface CharacterInfo {
   readonly name: string;
@@ -25,7 +39,7 @@ export const CHARACTERS: Readonly<Record<Character, CharacterInfo>> = {
     name: 'The Swarm',
     office: 'Kartavya Path',
     power: 'Sit-in',
-    effect: '4 s · untouchable',
+    effect: `${secondsLabel(SIT_IN_DURATION)} · untouchable`,
     blurb: 'Everyone sits. Nobody can be stamped.',
     backfire: '',
     quote: '',
@@ -35,9 +49,9 @@ export const CHARACTERS: Readonly<Record<Character, CharacterInfo>> = {
     name: 'Prime Time',
     office: 'The Anchor',
     power: 'The Nation Demands',
-    effect: 'Freeze a crowd · 8 s',
-    blurb: 'Brands the biggest crowd "anti-national". They freeze for 8 s.',
-    backfire: 'The clip goes viral. +30% roaches from all six roads.',
+    effect: `Freeze a crowd · ${secondsLabel(FREEZE_DURATION)}`,
+    blurb: `Brands the biggest crowd "anti-national". They freeze for ${secondsLabel(FREEZE_DURATION)}.`,
+    backfire: `The clip goes viral. +${String(BACKFIRE_PERCENT)}% roaches from all six roads.`,
     quote: '"The nation wants to know why these cockroaches won\'t let me finish my sentence!"',
     art: primeTimeArt,
   },
@@ -45,9 +59,9 @@ export const CHARACTERS: Readonly<Record<Character, CharacterInfo>> = {
     name: 'Chanakya',
     office: 'The Home Office',
     power: 'Masterstroke',
-    effect: 'Barricade every lane',
-    blurb: 'Three barricades, one on every lane. All in one tap.',
-    backfire: 'At 25 roaches the pile climbs over, faster than before.',
+    effect: `Every lane · ${secondsLabel(MASTERSTROKE_DURATION)}`,
+    blurb: `Three barricades, one on every lane, for ${secondsLabel(MASTERSTROKE_DURATION)}. All in one tap.`,
+    backfire: `At ${String(CLIMB_THRESHOLD)} roaches the pile climbs over, twice as fast.`,
     quote: '"Masterstroke. We have barricaded the barricades."',
     art: chanakyaArt,
   },
@@ -55,9 +69,9 @@ export const CHARACTERS: Readonly<Record<Character, CharacterInfo>> = {
     name: 'Pradhan Sevak',
     office: 'The Top Office',
     power: 'Mann Ki Baat',
-    effect: 'Sympathy to zero · 20 s',
-    blurb: 'A 20-second address to the nation. Every crowd on the lawns stops to listen.',
-    backfire: "You can't smash while speaking. It wasn't about the roaches, so they keep walking.",
+    effect: `Lawns quiet · ${secondsLabel(LAWN_PAUSE_DURATION)}`,
+    blurb: `An address to the nation. Every crowd on the lawns stops to listen for ${secondsLabel(LAWN_PAUSE_DURATION)}.`,
+    backfire: `No smashing for the first ${secondsLabel(SILENCE_DURATION)}. It wasn't about the roaches, so they keep walking.`,
     quote: '"Today, let us talk about millets."',
     art: pradhanSevakArt,
   },

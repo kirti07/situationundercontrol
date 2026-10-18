@@ -9,7 +9,7 @@ export interface PillStyle {
 }
 
 export const PILLS = {
-  rally: {
+  swarm: {
     fill: PALETTE.marigold,
     ink: PALETTE.ink,
     border: PALETTE.ink,

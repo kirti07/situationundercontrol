@@ -1,9 +1,10 @@
-import { LIGHTS_MINUTE, TICKS_PER_MINUTE, type State } from '@suc/sim';
+import { LIGHTS_MINUTE, TICKS_PER_MINUTE, type Side, type State } from '@suc/sim';
 import type { Art } from './art.ts';
 import { drawBackdrop } from './backdrop.ts';
 import { createEffects, type EffectLabels } from './effects.ts';
-import { drawBarricades, drawRally, drawSitIn, drawStampWarning } from './hazards.ts';
+import { drawBarricades, drawSitIn, drawStampWarning } from './hazards.ts';
 import type { Renderer } from './renderer.ts';
+import { createRally } from './rally.ts';
 import { createRoachPainter } from './roaches.ts';
 import { fitCanvas } from './viewport.ts';
 
@@ -13,6 +14,7 @@ export interface RenderOptions {
   readonly art: Art;
   readonly labels: EffectLabels;
   readonly reducedMotion: () => boolean;
+  readonly side: Side;
 }
 
 const context2d = (canvas: HTMLCanvasElement): CanvasRenderingContext2D => {
@@ -28,7 +30,8 @@ export const createCanvasRenderer = (
   const ctx = context2d(canvas);
   const backdrop = document.createElement('canvas');
   const backdropCtx = context2d(backdrop);
-  const effects = createEffects(options.labels);
+  const effects = createEffects(options);
+  const rally = createRally(options.side, options.reducedMotion);
   let scale = 1;
   let archLit = false;
   const roaches = createRoachPainter(ctx, options.art, () => scale, options.reducedMotion);
@@ -37,7 +40,7 @@ export const createCanvasRenderer = (
     backdrop.width = canvas.width;
     backdrop.height = canvas.height;
     backdropCtx.setTransform(scale, 0, 0, scale, 0, 0);
-    drawBackdrop(backdropCtx, options.art, archLit);
+    drawBackdrop(backdropCtx, options.art, archLit, options.side);
   };
 
   const resize = (): void => {
@@ -61,7 +64,7 @@ export const createCanvasRenderer = (
     drawStampWarning(ctx, state);
     drawBarricades(ctx, state);
     roaches.draw(state, alpha, now);
-    drawRally(ctx, state, now);
+    rally.draw(ctx, state, now);
     effects.draw(ctx, now);
   };
 
