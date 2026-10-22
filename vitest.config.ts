@@ -1,9 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  resolve: { conditions: ['source'] },
   test: {
-    projects: ['packages/*', 'apps/*'],
+    projects: ['apps/*'],
     passWithNoTests: true,
   },
 });

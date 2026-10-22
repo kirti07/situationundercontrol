@@ -14,19 +14,8 @@ const htmlSinks = [
   },
 ];
 
-const determinism = [
-  {
-    selector: 'Literal[raw=/^\\d*\\.\\d|[eE]-/]',
-    message: 'The sim uses integer maths only.',
-  },
-  {
-    selector: 'CallExpression[callee.property.name=/^(sort|toSorted)$/][arguments.length=0]',
-    message: 'Sort with a total comparator.',
-  },
-];
-
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/coverage/**', 'design/**', 'docs/**'] },
+  { ignores: ['**/dist/**', '**/coverage/**', 'design/**'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -50,37 +39,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/sim/src/**/*.ts'],
-    rules: {
-      'no-restricted-globals': [
-        'error',
-        'Date',
-        'performance',
-        'window',
-        'document',
-        'setTimeout',
-        'setInterval',
-        'crypto',
-      ],
-      'no-restricted-properties': [
-        'error',
-        ...['random', 'sin', 'cos', 'tan', 'sqrt', 'pow', 'atan2', 'exp', 'log', 'hypot'].map(
-          (property) => ({
-            object: 'Math',
-            property,
-            message: 'Not deterministic across engines.',
-          }),
-        ),
-      ],
-      'no-restricted-syntax': ['error', ...htmlSinks, ...determinism],
-    },
-  },
-  {
     files: ['apps/game/src/**/*.ts'],
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['apps/game/api/**/*.ts', 'apps/game/server/**/*.ts', 'tools/**/*.ts', '**/*.config.ts'],
+    files: ['tools/**/*.ts', '**/*.config.ts'],
     languageOptions: { globals: globals.node },
   },
   {

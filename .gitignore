@@ -5,8 +5,6 @@ coverage/
 .env*
 !.env.example
 *.tsbuildinfo
-test-results/
-playwright-report/
 .DS_Store
 
 # Local planning

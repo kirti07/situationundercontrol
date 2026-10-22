@@ -17,7 +17,6 @@ const productionHeaders = Object.fromEntries(
 );
 
 export default defineConfig({
-  resolve: { conditions: ['source'] },
   build: {
     target: 'es2022',
     modulePreload: { polyfill: false },

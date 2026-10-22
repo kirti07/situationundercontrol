@@ -10,9 +10,6 @@
     "typecheck": "tsc -b",
     "size": "size-limit"
   },
-  "dependencies": {
-    "@suc/sim": "workspace:*"
-  },
   "devDependencies": {
     "@fontsource/ibm-plex-sans-condensed": "5.3.0",
     "@fontsource/libre-caslon-text": "5.3.0",
@@ -25,14 +22,9 @@
   },
   "size-limit": [
     {
-      "name": "front page JS",
-      "path": "dist/assets/index-*.js",
-      "limit": "30 kB"
-    },
-    {
       "name": "all JS",
       "path": "dist/assets/*.js",
-      "limit": "60 kB"
+      "limit": "10 kB"
     }
   ]
 }

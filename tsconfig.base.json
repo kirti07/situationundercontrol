@@ -16,7 +16,6 @@
     "erasableSyntaxOnly": true,
     "isolatedModules": true,
     "rewriteRelativeImportExtensions": true,
-    "customConditions": ["source"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   }

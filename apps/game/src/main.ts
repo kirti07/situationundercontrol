@@ -1,31 +1,43 @@
 import './styles/index.css';
-import { requireElement } from './dom.ts';
-import { createRouter, type ScreenFactory, type ScreenLoaders } from './router.ts';
-import { frontScreen } from './screens/front.ts';
-import { sideFromQuery } from './ui/share.ts';
+import policeWalk from './assets/art/police-walk.webp';
+import primeTime from './assets/art/prime-time.webp';
+import publicServant from './assets/art/public-servant.webp';
+import roachHero from './assets/art/roach-hero.webp';
 
-const loadPlay = (): Promise<ScreenFactory<'play'>> =>
-  import('./screens/play.ts').then((module) => module.playScreen);
+const CAST = [
+  { src: roachHero, name: 'The Cockroach' },
+  { src: primeTime, name: 'Media' },
+  { src: publicServant, name: 'Public Servant' },
+  { src: policeWalk, name: 'Police' },
+] as const;
 
-const loadRoster = (): Promise<ScreenFactory<'roster'>> =>
-  import('./screens/roster.ts').then((module) => module.rosterScreen);
-
-const loaders: ScreenLoaders = {
-  front: () => Promise.resolve(frontScreen),
-  roster: loadRoster,
-  howto: () => import('./screens/howto.ts').then((module) => module.howtoScreen),
-  play: loadPlay,
-  result: () => import('./screens/result.ts').then((module) => module.resultScreen),
+const element = <K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className: string,
+  text = '',
+): HTMLElementTagNameMap[K] => {
+  const node = document.createElement(tag);
+  node.className = className;
+  node.textContent = text;
+  return node;
 };
 
-const whenIdle = (task: () => void): void => {
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(task);
-    return;
-  }
-  setTimeout(task, 1000);
+const portrait = ({ src, name }: (typeof CAST)[number]): HTMLElement => {
+  const figure = element('figure', 'cast__member');
+  const image = element('img', 'cast__image');
+  image.src = src;
+  image.alt = name;
+  figure.append(image, element('figcaption', 'cast__name', name));
+  return figure;
 };
 
-const navigate = createRouter(requireElement('#app', HTMLElement), loaders);
-navigate('front', { invited: sideFromQuery(window.location.search) });
-whenIdle(() => void Promise.all([loadPlay(), loadRoster()]));
+const cast = element('div', 'cast');
+cast.append(...CAST.map(portrait));
+
+document
+  .getElementById('app')
+  ?.replaceChildren(
+    element('h1', 'title', 'Situation Under Control'),
+    element('p', 'tagline', 'New game in the works'),
+    cast,
+  );

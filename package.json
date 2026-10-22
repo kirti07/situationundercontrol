@@ -9,22 +9,19 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @suc/game dev",
-    "lint": "eslint . && prettier --check . && depcruise packages apps --config .dependency-cruiser.cjs && knip --no-config-hints",
+    "lint": "eslint . && prettier --check . && depcruise apps --config .dependency-cruiser.cjs && knip --no-config-hints",
     "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "test": "vitest run",
     "size": "pnpm --filter @suc/game size",
-    "scan": "node tools/scan-secrets.ts apps/game/dist",
-    "balance": "node tools/balance.ts"
+    "scan": "node tools/scan-secrets.ts apps/game/dist"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@playwright/test": "1.64.0",
     "@types/node": "24.19.1",
     "dependency-cruiser": "18.5.0",
     "eslint": "10.12.0",
     "eslint-config-prettier": "10.1.8",
-    "fast-check": "4.10.2",
     "globals": "17.13.0",
     "knip": "6.41.0",
     "prettier": "3.9.9",
