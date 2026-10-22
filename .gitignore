@@ -8,4 +8,5 @@ coverage/
 .DS_Store
 
 # Local planning
-todo.md
+ARCHITECTURE.md
+TODO.md

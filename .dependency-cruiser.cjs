@@ -1,6 +1,24 @@
 module.exports = {
   forbidden: [
     {
+      name: 'browser-never-imports-server',
+      severity: 'error',
+      from: { path: '^apps/game/src' },
+      to: { path: '^apps/game/api' },
+    },
+    {
+      name: 'server-never-imports-browser',
+      severity: 'error',
+      from: { path: '^apps/game/api' },
+      to: { path: '^apps/game/src/(engine|screens|net)' },
+    },
+    {
+      name: 'core-is-pure',
+      severity: 'error',
+      from: { path: '^apps/game/src/(core|content)' },
+      to: { path: '^apps/game/src/(engine|screens|net)' },
+    },
+    {
       name: 'no-circular',
       severity: 'error',
       from: {},

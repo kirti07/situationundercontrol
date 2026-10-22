@@ -22,9 +22,46 @@
   },
   "size-limit": [
     {
+      "name": "home page JS",
+      "path": "dist/assets/index-*.js",
+      "limit": "25 kB"
+    },
+    {
       "name": "all JS",
       "path": "dist/assets/*.js",
-      "limit": "10 kB"
+      "limit": "60 kB"
+    },
+    {
+      "name": "cockroach sprites",
+      "path": [
+        "dist/assets/roach-*.webp",
+        "dist/assets/police-*.webp",
+        "dist/assets/hazard-*.webp"
+      ],
+      "limit": "120 kB"
+    },
+    {
+      "name": "media sprites",
+      "path": [
+        "dist/assets/media-run-*.webp",
+        "dist/assets/police-*.webp",
+        "dist/assets/hazard-fire-*.webp"
+      ],
+      "limit": "90 kB"
+    },
+    {
+      "name": "public servant sprites",
+      "path": [
+        "dist/assets/servant-run-*.webp",
+        "dist/assets/police-*.webp",
+        "dist/assets/hazard-fire-*.webp"
+      ],
+      "limit": "90 kB"
+    },
+    {
+      "name": "fonts",
+      "path": "dist/assets/*.woff2",
+      "limit": "260 kB"
     }
   ]
 }

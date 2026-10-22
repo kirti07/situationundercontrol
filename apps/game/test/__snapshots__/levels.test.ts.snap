@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden replay > level 1 (agency as Police) with a fixed input script ends in the same state 1`] = `535009387`;
+
+exports[`golden replay > level 1 (cockroach) with a fixed input script ends in the same state 1`] = `305654129`;

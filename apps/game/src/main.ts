@@ -1,43 +1,12 @@
 import './styles/index.css';
-import policeWalk from './assets/art/police-walk.webp';
-import primeTime from './assets/art/prime-time.webp';
-import publicServant from './assets/art/public-servant.webp';
-import roachHero from './assets/art/roach-hero.webp';
+import { createRouter, type Loaders } from './router.ts';
+import { homeScreen } from './screens/home.ts';
 
-const CAST = [
-  { src: roachHero, name: 'The Cockroach' },
-  { src: primeTime, name: 'Media' },
-  { src: publicServant, name: 'Public Servant' },
-  { src: policeWalk, name: 'Police' },
-] as const;
-
-const element = <K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className: string,
-  text = '',
-): HTMLElementTagNameMap[K] => {
-  const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
-  return node;
+const loaders: Loaders = {
+  home: () => Promise.resolve(homeScreen),
+  select: () => import('./screens/select.ts').then((module) => module.selectScreen),
+  play: () => import('./screens/play.ts').then((module) => module.playScreen),
 };
 
-const portrait = ({ src, name }: (typeof CAST)[number]): HTMLElement => {
-  const figure = element('figure', 'cast__member');
-  const image = element('img', 'cast__image');
-  image.src = src;
-  image.alt = name;
-  figure.append(image, element('figcaption', 'cast__name', name));
-  return figure;
-};
-
-const cast = element('div', 'cast');
-cast.append(...CAST.map(portrait));
-
-document
-  .getElementById('app')
-  ?.replaceChildren(
-    element('h1', 'title', 'Situation Under Control'),
-    element('p', 'tagline', 'New game in the works'),
-    cast,
-  );
+const host = document.getElementById('app');
+if (host !== null) createRouter(host, loaders)('home');

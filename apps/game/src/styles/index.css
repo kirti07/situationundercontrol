@@ -2,8 +2,12 @@
 @import '@fontsource/libre-caslon-text/latin-400-italic.css';
 @import '@fontsource/special-elite/latin-400.css';
 @import '@fontsource/ibm-plex-sans-condensed/latin-400.css';
+@import '@fontsource/ibm-plex-sans-condensed/latin-700.css';
 @import '@fontsource/tiro-devanagari-hindi/devanagari-400.css';
 @import './tokens.css';
+@import './home.css';
+@import './select.css';
+@import './play.css';
 
 *,
 *::before,
@@ -11,60 +15,29 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: var(--night);
+  color: var(--on-night);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
 }
 
 #app {
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 24px;
   min-height: 100dvh;
-  padding: 32px 16px;
-  color: var(--on-night);
-  text-align: center;
 }
 
-.title {
-  margin: 0;
-  font-family: var(--font-head);
-  font-size: clamp(36px, 8vw, 72px);
-  font-weight: 900;
-  line-height: 1;
+button {
+  font: inherit;
+  cursor: pointer;
 }
 
-.tagline {
-  margin: 0;
-  color: var(--muted-night);
-  font-family: var(--font-date);
-  font-size: 15px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.cast {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
-}
-
-.cast__member {
-  margin: 0;
-}
-
-.cast__image {
-  display: block;
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-}
-
-.cast__name {
-  margin-top: 8px;
-  color: var(--sodium);
-  font-family: var(--font-date);
-  font-size: 13px;
+:focus-visible {
+  outline: 3px solid var(--sodium);
+  outline-offset: 3px;
 }

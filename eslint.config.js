@@ -43,7 +43,28 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['tools/**/*.ts', '**/*.config.ts'],
+    files: ['apps/game/src/core/**/*.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...['Date', 'performance', 'window', 'document', 'navigator', 'fetch'].map((name) => ({
+          name,
+          message: 'core is pure and deterministic.',
+        })),
+      ],
+      'no-restricted-properties': [
+        'error',
+        { object: 'Math', property: 'random', message: 'Use the seeded RNG.' },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        ...htmlSinks,
+        { selector: 'Literal[raw=/\\d\\.\\d/]', message: 'core uses integers only.' },
+      ],
+    },
+  },
+  {
+    files: ['apps/game/api/**/*.ts', 'tools/**/*.ts', '**/*.config.ts'],
     languageOptions: { globals: globals.node },
   },
   {

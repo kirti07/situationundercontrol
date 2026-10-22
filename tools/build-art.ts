@@ -27,6 +27,13 @@ const PICTURES: readonly Picture[] = [
   { source: 'sprites/police-walk.png', name: 'police-walk', width: 240, trim: true },
   { source: 'sprites/police-asleep.png', name: 'police-asleep', width: 240, trim: true },
   { source: 'sprites/roach-hero.png', name: 'roach-hero', width: 240, trim: true },
+  { source: 'sprites/fire-orange.png', name: 'hazard-fire', width: 400 },
+  { source: 'sprites/hazard-river.png', name: 'hazard-river', width: 400 },
+  { source: 'sprites/hazard-pothole.png', name: 'hazard-pothole', width: 400 },
+  { source: 'sprites/hazard-smog.png', name: 'hazard-smog', width: 240 },
+  { source: 'sprites/roach.png', name: 'roach-crowd', width: 120, trim: true },
+  { source: 'sprites/media-anchor.png', name: 'media-run', width: 240, trim: true },
+  { source: 'sprites/public-servant.png', name: 'servant-run', width: 240, trim: true },
 ];
 
 const trimmed = (source: string): Sharp => sharp(join(SOURCE, source)).trim({ threshold: 8 });
