@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "test": "vitest run",
     "size": "pnpm --filter @suc/game size",
-    "scan": "node tools/scan-secrets.ts apps/game/dist"
+    "scan": "node tools/scan-secrets.ts apps/game/dist",
+    "edition:publish": "node tools/publish-edition.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

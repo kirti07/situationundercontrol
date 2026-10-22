@@ -64,7 +64,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/game/api/**/*.ts', 'tools/**/*.ts', '**/*.config.ts'],
+    files: ['apps/game/api/**/*.ts', 'apps/game/server/**/*.ts', 'tools/**/*.ts', '**/*.config.ts'],
     languageOptions: { globals: globals.node },
   },
   {

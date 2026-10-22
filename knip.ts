@@ -5,7 +5,10 @@ const CSS_IMPORT = /@import\s+['"]([^'"]+)['"]/g;
 const config: KnipConfig = {
   workspaces: {
     '.': { entry: ['tools/*.ts'], project: ['tools/**/*.ts'] },
-    'apps/game': { project: ['src/**/*.{ts,css}'] },
+    'apps/game': {
+      entry: ['api/*.ts'],
+      project: ['src/**/*.{ts,css}', 'server/**/*.ts', 'api/**/*.ts'],
+    },
   },
   compilers: {
     css: (text: string) =>

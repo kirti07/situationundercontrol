@@ -1,5 +1,4 @@
 import { BLAME } from '../content/copy.ts';
-import { BUNDLED } from '../content/edition.ts';
 import { LEVELS } from '../content/levels.ts';
 import { type Ending, ENDINGS, type Item, roleOf, type Side } from '../content/roles.ts';
 import { type Level, parseLevel } from '../core/level.ts';
@@ -12,6 +11,8 @@ import { startLoop } from '../engine/loop.ts';
 import { createRenderer } from '../engine/render.ts';
 import { loadSprites } from '../engine/sprites.ts';
 import type { ScreenFactory } from '../router.ts';
+import { currentEdition } from '../net/edition.ts';
+import { startPresence } from '../net/presence.ts';
 import { load, recordScore, setMuted } from '../storage.ts';
 import { createHud } from './hud.ts';
 import { type Choice, clearSheet, endingSheet, pauseSheet } from './overlays.ts';
@@ -85,7 +86,8 @@ export const playScreen: ScreenFactory<'play'> = (navigate, { side, character })
   stage.append(canvas, ticker, layer);
   root.append(hud.top, stage, hud.bottom, touch.root, rotateCard());
   controls.bindTouch(touch.pad, touch.jump);
-  const renderer = createRenderer(canvas, loadSprites(role.look), role, BUNDLED);
+  const edition = currentEdition();
+  const renderer = createRenderer(canvas, loadSprites(role.look), role, edition);
 
   let index = 0;
   let state = createRun(first, NEW_RUN, seed(), role.mods);
@@ -120,7 +122,7 @@ export const playScreen: ScreenFactory<'play'> = (navigate, { side, character })
     show(endingSheet(state, ending, best, choices), 'result');
   };
   const breaking = (index: number): void => {
-    const headlines = BUNDLED.stories;
+    const headlines = edition.stories;
     ticker.textContent = `BREAKING · ${headlines[index % headlines.length] ?? ''}`;
     ticker.dataset.on = 'true';
     window.clearTimeout(tickerTimer);
@@ -228,6 +230,7 @@ export const playScreen: ScreenFactory<'play'> = (navigate, { side, character })
       hud.update(state);
     },
   );
+  const stopPresence = startPresence(side, () => sheet === 'none' && state.phase === 'play');
   const observer = new ResizeObserver(([entry]) => {
     if (entry !== undefined) renderer.resize(entry.contentRect.width, entry.contentRect.height);
   });
@@ -238,6 +241,7 @@ export const playScreen: ScreenFactory<'play'> = (navigate, { side, character })
     root,
     dispose: () => {
       loop.stop();
+      stopPresence();
       window.clearTimeout(tickerTimer);
       window.clearTimeout(protestTimer);
       controls.dispose();

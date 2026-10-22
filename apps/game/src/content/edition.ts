@@ -1,4 +1,4 @@
-import current from './editions/current.json';
+import { CURRENT } from './editions/current.ts';
 
 export interface Edition {
   readonly edition: number;
@@ -44,4 +44,4 @@ export const isEdition = (value: unknown): value is Edition => {
   );
 };
 
-export const BUNDLED: Edition = current;
+export const BUNDLED: Edition = CURRENT;

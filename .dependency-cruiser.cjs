@@ -4,18 +4,18 @@ module.exports = {
       name: 'browser-never-imports-server',
       severity: 'error',
       from: { path: '^apps/game/src' },
-      to: { path: '^apps/game/api' },
+      to: { path: '^apps/game/(api|server)' },
     },
     {
       name: 'server-never-imports-browser',
       severity: 'error',
-      from: { path: '^apps/game/api' },
+      from: { path: '^apps/game/(api|server)' },
       to: { path: '^apps/game/src/(engine|screens|net)' },
     },
     {
       name: 'core-is-pure',
       severity: 'error',
-      from: { path: '^apps/game/src/(core|content)' },
+      from: { path: '^apps/game/src/(core|content|shared)' },
       to: { path: '^apps/game/src/(engine|screens|net)' },
     },
     {
